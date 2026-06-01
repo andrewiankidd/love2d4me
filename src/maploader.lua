@@ -33,7 +33,7 @@ end
 local function load_json(path)
     local data = JSON.load(path)
     if data then return data end
-    return t
+    return {}
 end
 
 -- Load a legacy map.lua file and capture the globals it sets

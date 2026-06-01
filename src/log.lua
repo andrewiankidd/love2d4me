@@ -13,7 +13,6 @@
 
 local Log = {}
 
-local level_names = { "DEBUG", "INFO", "WARN", "ERROR" }
 local level_values = { DEBUG = 1, INFO = 2, WARN = 3, ERROR = 4 }
 local min_level = 1 -- DEBUG by default
 local log_file = nil

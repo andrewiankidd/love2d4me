@@ -11,7 +11,6 @@
 -- In love.draw:    Dialog.draw()
 -- In love.keypressed: Dialog.keypressed(key)
 
-local Input = require("love2d4me.src.input")
 
 local Dialog = {}
 
@@ -104,7 +103,6 @@ function Dialog.draw()
     end
 
     -- Speaker name
-    local prev_font = love.graphics.getFont()
     love.graphics.setColor(1, 1, 0, 1)
     love.graphics.print(speaker, text_x, box_y + 8)
     love.graphics.setColor(1, 1, 1, 1)

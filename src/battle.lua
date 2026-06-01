@@ -30,7 +30,6 @@ local battle_state = "main"
 local options = {"Attack", "Defend", "Magic", "Run"}
 local callbacks = {}
 local hit_anim = false
-local msg_overlay = nil
 
 function Battle.start(opts)
     callbacks = opts

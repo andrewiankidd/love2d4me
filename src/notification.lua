@@ -47,7 +47,6 @@ end
 function Notification.draw()
     if not current then return end
     local sw = love.graphics.getDimensions()
-    local prev_font = love.graphics.getFont()
     love.graphics.setColor(1, 1, 1, fade)
     love.graphics.printf(current.text, 0, 40, sw, "center")
     love.graphics.setColor(1, 1, 1, 1)

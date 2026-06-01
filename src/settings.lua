@@ -25,8 +25,6 @@ local Settings = {}
 local FILENAME = "settings.json"
 local defaults = {}
 local current = {}
-local dirty = false
-
 -- Minimal JSON encode/decode (no external deps)
 
 local function json_encode(t)

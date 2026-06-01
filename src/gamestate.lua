@@ -31,8 +31,7 @@ local GameState = {}
 local state = "splash"
 local config = {}
 local callbacks = {}
-local paused = false
-local custom_states = {} -- { state_name = { update, draw, keypressed, keyreleased } }
+local custom_states = {}
 local loading_done = false
 local loading_started = false
 local loading_text = "Loading..."
@@ -41,6 +40,10 @@ local current_music = nil
 local loading_dots = 0
 local loading_timer = 0
 local game_w, game_h = 0, 0
+local _loading_bg_img = nil
+local _death_bg_img = nil
+local _death_bg_y = nil
+local _next_frame_time = nil
 
 local CONFIG_PATHS = {
     "game/config.json",
@@ -355,7 +358,7 @@ function GameState.update(dt)
             loading_timer = 0
             loading_dots = (loading_dots + 1) % 4
         end
-    elseif state == "menu" or state == "pause" then
+    elseif state == "menu" or state == "pause" then -- luacheck: ignore 542
         -- menu is idle, waits for keypressed
     elseif state == "gameplay" then
         if callbacks.on_gameplay_update then

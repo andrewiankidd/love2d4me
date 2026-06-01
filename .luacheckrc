@@ -3,6 +3,10 @@
 
 std = "lua51+love"
 
+read_globals = {
+    "package.searchers",
+}
+
 globals = {
     "love",
     "Input",
