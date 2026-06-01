@@ -187,7 +187,7 @@ function Menu.draw()
     -- Logo
     if current_menu.logo then
         love.graphics.setColor(1, 1, 1, 1)
-        local lw, lh = current_menu.logo:getDimensions()
+        local lw, _ = current_menu.logo:getDimensions()
         local lx = (sw - lw * logo_scale) / 2
         love.graphics.draw(current_menu.logo, lx, top_y, 0, logo_scale, logo_scale)
         top_y = top_y + logo_h
