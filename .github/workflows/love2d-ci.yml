@@ -48,7 +48,7 @@ jobs:
         run: luacheck src/ --exclude-files "src/lib/*"
 
       - name: StyLua
-        run: stylua --check src/ --glob "**/*.lua" --exclude "src/lib/**"
+        run: stylua --check src/ --glob "**/*.lua"
 
   build:
     name: Build
