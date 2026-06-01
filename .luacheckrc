@@ -41,6 +41,16 @@ globals = {
     "pixelfontlarge",
     "pixelfontlargew",
     "pixelfonthuge",
+    "gw",
+    "gh",
+    "protagX",
+    "protagY",
+    "cameraoffsetx",
+    "cameraoffsety",
+    "calcx",
+    "calcy",
+    "dead",
+    "paused",
 }
 
 unused_args = false

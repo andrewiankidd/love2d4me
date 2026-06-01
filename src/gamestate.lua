@@ -31,6 +31,7 @@ local GameState = {}
 local state = "splash"
 local config = {}
 local callbacks = {}
+local paused = false
 local custom_states = {}
 local loading_done = false
 local loading_started = false
