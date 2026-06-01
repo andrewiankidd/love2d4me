@@ -1,4 +1,4 @@
-﻿-- world.lua â€” Overworld renderer.
+-- world.lua -- Overworld renderer.
 --
 -- Draws the game world: map background, NPCs, items, mobs, player, overlay.
 -- Games pass their world state each frame. The module handles the draw order.

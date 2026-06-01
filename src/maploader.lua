@@ -1,17 +1,17 @@
-﻿-- maploader.lua â€” Shared map loading for LOVE2D games.
+-- maploader.lua -- Shared map loading for LOVE2D games.
 --
 -- Loads maps from game/maps/<name>/ with a standard file layout:
 --
 --   game/maps/town/
---     config.json      â€” warps, NPCs, items, mobs, metadata
---     background.png   â€” base layer
---     collision.png    â€” pixel-color collision (optional, preferred)
---     overlay.png      â€” drawn above sprites (optional)
---     lights.png       â€” light map for day/night (optional)
---     sky.png          â€” parallax sky layer (optional, platformer)
---     main.png         â€” main terrain layer (optional, platformer)
+--     config.json      -- warps, NPCs, items, mobs, metadata
+--     background.png   -- base layer
+--     collision.png    -- pixel-color collision (optional, preferred)
+--     overlay.png      -- drawn above sprites (optional)
+--     lights.png       -- light map for day/night (optional)
+--     sky.png          -- parallax sky layer (optional, platformer)
+--     main.png         -- main terrain layer (optional, platformer)
 --
--- Collision: pixel-color via collision.png â€” red channel encodes permissions.
+-- Collision: pixel-color via collision.png -- red channel encodes permissions.
 -- Use Collision module for structured access with named permission strings.
 --
 -- Usage:

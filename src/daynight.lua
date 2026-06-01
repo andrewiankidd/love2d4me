@@ -1,4 +1,4 @@
-﻿-- daynight.lua â€” Day/night cycle overlay.
+-- daynight.lua -- Day/night cycle overlay.
 --
 -- Draws a darkness overlay that varies with time. Optionally composites
 -- a light map (additive blend) for localized lighting effects.

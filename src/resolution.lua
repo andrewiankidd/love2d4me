@@ -1,4 +1,4 @@
-﻿-- resolution.lua â€” Resolution scaling for LOVE2D games.
+-- resolution.lua -- Resolution scaling for LOVE2D games.
 --
 -- Renders the game at a fixed logical size regardless of window dimensions.
 -- Supports fit, stretch, center, and nearest-integer scaling modes.

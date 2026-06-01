@@ -1,4 +1,4 @@
-﻿-- camera.lua â€” 2D camera with tracking, bounds, and shake.
+-- camera.lua -- 2D camera with tracking, bounds, and shake.
 --
 -- Tracks a target position, clamps to map bounds, applies transform
 -- so game code draws in world space without manual offset math.

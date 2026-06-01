@@ -1,4 +1,4 @@
-﻿-- frames.lua â€” Standard sprite sheet frame layouts.
+-- frames.lua -- Standard sprite sheet frame layouts.
 --
 -- Maps direction names to frame indices for common sprite sheet formats.
 -- Games reference a layout by name instead of hardcoding frame numbers.

@@ -1,4 +1,4 @@
-﻿-- fonts.lua â€” Font loader for LOVE2D games.
+-- fonts.lua -- Font loader for LOVE2D games.
 --
 -- Auto-discovers fonts from game/fonts/ and love2d4me/assets/fonts/.
 -- TTF fonts are available at standard sizes via Fonts.get("name", size).

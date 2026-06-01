@@ -1,4 +1,4 @@
-﻿-- menu.lua â€” Generic menu system for LOVE2D games.
+-- menu.lua -- Generic menu system for LOVE2D games.
 --
 -- Data-driven menus: define entries with labels and callbacks.
 -- Handles rendering (centered, highlighted selection) and input

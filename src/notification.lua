@@ -1,4 +1,4 @@
-﻿-- notification.lua â€” Timed text notification overlay.
+-- notification.lua -- Timed text notification overlay.
 --
 -- Shows a message at the top of the screen that fades out.
 -- Multiple notifications queue and display one at a time.

@@ -1,4 +1,4 @@
-﻿-- savegame.lua â€” Save/load game state via Storage.
+-- savegame.lua -- Save/load game state via Storage.
 --
 -- Games register serializable components. On save, each component's
 -- serialize() is called and the results are written as JSON. On load,

@@ -1,9 +1,9 @@
-﻿-- inventory.lua â€” Item registry and inventory management.
+-- inventory.lua -- Item registry and inventory management.
 --
 -- Items live in game/items/<id>/ with:
---   config.json  â€” name, description, price
---   image.png    â€” inventory icon
---   sprite.png   â€” overworld sprite
+--   config.json  -- name, description, price
+--   image.png    -- inventory icon
+--   sprite.png   -- overworld sprite
 --
 -- Usage:
 --   local Inventory = require("love2d4me.src.inventory")

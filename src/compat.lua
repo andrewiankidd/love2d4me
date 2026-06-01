@@ -1,4 +1,4 @@
-﻿-- compat.lua â€” Legacy animation compatibility shim.
+-- compat.lua -- Legacy animation compatibility shim.
 --
 -- Exposes a global newAnimation() that matches the Legacy animation API but uses
 -- lib/animation.lua under the hood. Drop-in replacement so legacy code

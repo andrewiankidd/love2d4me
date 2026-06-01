@@ -1,4 +1,4 @@
-﻿-- sprite.lua â€” Directional sprite sheet helper.
+-- sprite.lua -- Directional sprite sheet helper.
 --
 -- Wraps a sprite sheet with direction-aware frame ranges.
 --

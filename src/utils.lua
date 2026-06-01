@@ -1,7 +1,7 @@
-﻿-- utils.lua â€” Common utility functions for LOVE2D games.
+-- utils.lua -- Common utility functions for LOVE2D games.
 --
 -- Adds missing standard-library helpers (math.round, string split/join).
--- Require once at startup â€” functions are injected globally for convenience.
+-- Require once at startup -- functions are injected globally for convenience.
 --
 -- Usage:
 --   require("love2d4me.src.utils")

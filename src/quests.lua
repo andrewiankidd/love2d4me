@@ -1,4 +1,4 @@
-﻿-- quests.lua â€” Quest/objective tracking system.
+-- quests.lua -- Quest/objective tracking system.
 --
 -- Quests live in game/objectives/<id>/config.json with:
 --   title, description, type, next

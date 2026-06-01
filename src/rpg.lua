@@ -1,4 +1,4 @@
-﻿-- rpg.lua â€” RPG stats: HP, XP, levels, death.
+-- rpg.lua -- RPG stats: HP, XP, levels, death.
 --
 -- Manages player stats with configurable leveling formula.
 -- Handles XP gain, level-up checks, and death detection.

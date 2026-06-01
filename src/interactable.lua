@@ -1,7 +1,7 @@
-﻿-- interactable.lua â€” Generic in-world interactable object registry.
+-- interactable.lua -- Generic in-world interactable object registry.
 --
 -- A flat registry for any object the player can interact with: vehicles,
--- pickups, doors, NPCs, switches. Composition-based â€” an interactable is
+-- pickups, doors, NPCs, switches. Composition-based -- an interactable is
 -- just a table with position + radius + any extra fields the game needs.
 --
 -- Usage:

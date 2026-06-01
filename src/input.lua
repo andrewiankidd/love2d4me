@@ -1,4 +1,4 @@
-﻿-- input.lua â€” Portable input abstraction for LOVE2D games.
+-- input.lua -- Portable input abstraction for LOVE2D games.
 --
 -- Drop this file into any LOVE2D project. It provides:
 --   - Unified action mapping (semantic names like "up", "confirm" instead of raw keys)
@@ -63,7 +63,7 @@ end
 
 -- Public API
 
--- Standard bindings â€” games get these automatically on init.
+-- Standard bindings -- games get these automatically on init.
 -- Games can override individual actions with Input.bind() after init,
 -- or pass custom_bindings to suppress defaults entirely.
 local DEFAULT_BINDINGS = {

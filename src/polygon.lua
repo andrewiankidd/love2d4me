@@ -1,4 +1,4 @@
-﻿-- polygon.lua â€” Polygon geometry utilities.
+-- polygon.lua -- Polygon geometry utilities.
 --
 -- Point-in-polygon, near-plane clipping, and depth sorting for
 -- games with polygon-based world geometry (buildings, zones, terrain).

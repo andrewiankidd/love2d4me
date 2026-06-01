@@ -1,4 +1,4 @@
-﻿-- conf.lua â€” Minimal LOVE2D configuration shim.
+-- conf.lua -- Minimal LOVE2D configuration shim.
 --
 -- Sets sensible window defaults. Identity and all game config
 -- are applied at runtime by GameState.init() from game/config.json.

@@ -1,4 +1,4 @@
-﻿-- log.lua â€” Structured logger for LOVE2D games.
+-- log.lua -- Structured logger for LOVE2D games.
 --
 -- Outputs structured log lines to console and optionally to disk.
 -- Format is LGTM-shaped: timestamp, level, message, key=value attributes.
@@ -39,7 +39,7 @@ end
 
 local function emit(level_name, msg, attrs)
     local line = string.format("[%s] [%s] %s%s", timestamp(), level_name, msg, format_attrs(attrs))
-    -- No print() â€” avoids spawning console windows on Windows.
+    -- No print() -- avoids spawning console windows on Windows.
     -- Logs go to the buffer and flush to disk via Storage.
     table.insert(log_buffer, line)
 end

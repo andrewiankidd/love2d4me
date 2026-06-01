@@ -1,15 +1,15 @@
-﻿-- npc.lua â€” Entity registry, loader, and runtime.
+-- npc.lua -- Entity registry, loader, and runtime.
 --
 -- Unified system for all map entities: NPCs, mobs, trainers, etc.
 -- Each entity has a character (sprite source), position, behavior,
 -- and interaction type.
 --
 -- Character data lives in game/npcs/<name>/ or game/mobs/<name>/:
---   sprite.png   â€” overworld sprite sheet (rows: S, ?, E, ?, N, ?, W, ?)
---   picture.png  â€” portrait for dialog
---   battle.png   â€” battle sprite (optional)
---   prompt.png   â€” interaction prompt icon (optional)
---   config.json  â€” stats, metadata (optional)
+--   sprite.png   -- overworld sprite sheet (rows: S, ?, E, ?, N, ?, W, ?)
+--   picture.png  -- portrait for dialog
+--   battle.png   -- battle sprite (optional)
+--   prompt.png   -- interaction prompt icon (optional)
+--   config.json  -- stats, metadata (optional)
 --
 -- Entity config in map config.json:
 --   "entities": [

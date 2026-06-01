@@ -1,10 +1,10 @@
-﻿-- splash.lua â€” Animated splash screen.
+-- splash.lua -- Animated splash screen.
 --
 -- Plays a sprite-sheet splash centered on screen, then calls on_complete.
 --
 -- Image resolution order (no config needed):
---   1. game/pictures/splash.png  â€” game provides its own
---   2. love2d4me/assets/splash.png â€” default andrewkidd logo
+--   1. game/pictures/splash.png  -- game provides its own
+--   2. love2d4me/assets/splash.png -- default andrewkidd logo
 --
 -- Usage:
 --   local Splash = require("love2d4me.src.splash")

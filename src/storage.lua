@@ -1,4 +1,4 @@
-﻿-- storage.lua â€” Portable/home-dir storage abstraction for LOVE2D games.
+-- storage.lua -- Portable/home-dir storage abstraction for LOVE2D games.
 --
 -- All disk I/O goes through this module. On init it detects portable mode
 -- (a `portable.txt` file beside the binary) and routes reads/writes to

@@ -1,4 +1,4 @@
-﻿-- settings.lua â€” Persistent game settings backed by storage.lua.
+-- settings.lua -- Persistent game settings backed by storage.lua.
 --
 -- Saves to <storage_root>/settings.json. Loads on init, writes on change.
 -- Games define their own defaults; saved values override them.

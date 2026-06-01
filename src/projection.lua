@@ -1,9 +1,9 @@
-﻿-- projection.lua â€” World-to-screen coordinate transforms.
+-- projection.lua -- World-to-screen coordinate transforms.
 --
 -- Three projection modes for different game types:
---   orthographic â€” flat 2D with camera offset (top-down, platformer)
---   mode7        â€” retro-style scanline perspective (pseudo-3D ground plane)
---   oblique      â€” ground-plane perspective with horizon (2.5D city, racing)
+--   orthographic -- flat 2D with camera offset (top-down, platformer)
+--   mode7        -- retro-style scanline perspective (pseudo-3D ground plane)
+--   oblique      -- ground-plane perspective with horizon (2.5D city, racing)
 --
 -- Usage:
 --   local Projection = require("love2d4me.src.projection")
@@ -22,7 +22,7 @@
 local Projection = {}
 
 -- â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
--- Orthographic â€” direct mapping with camera offset
+-- Orthographic -- direct mapping with camera offset
 -- â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 
 function Projection.orthographic(wx, wy, cam_x, cam_y)
@@ -30,7 +30,7 @@ function Projection.orthographic(wx, wy, cam_x, cam_y)
 end
 
 -- â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
--- Mode7 â€” retro-style scanline perspective
+-- Mode7 -- retro-style scanline perspective
 -- â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 
 function Projection.mode7(cam_x, cam_y, texture, opts)
@@ -50,7 +50,7 @@ function Projection.mode7(cam_x, cam_y, texture, opts)
 end
 
 -- â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
--- Oblique â€” ground-plane perspective with horizon line
+-- Oblique -- ground-plane perspective with horizon line
 -- â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 
 local ObliqueCamera = {}

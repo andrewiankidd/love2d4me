@@ -1,4 +1,4 @@
-﻿-- json.lua â€” Minimal JSON parser for LOVE2D games.
+-- json.lua -- Minimal JSON parser for LOVE2D games.
 --
 -- Handles: objects, arrays, strings, numbers, booleans, null.
 -- No external dependencies. Good enough for config files.

@@ -1,4 +1,4 @@
-﻿-- battle.lua â€” Turn-based combat system.
+-- battle.lua -- Turn-based combat system.
 --
 -- Generic RPG battle: player vs N enemies, Attack/Defend/Magic/Run.
 -- Games configure via callbacks for damage formulas, sprites, rewards.

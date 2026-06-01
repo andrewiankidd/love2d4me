@@ -1,4 +1,4 @@
-﻿-- collision.lua â€” Pixel-color collision map reader.
+-- collision.lua -- Pixel-color collision map reader.
 --
 -- Reads pixel colors at world coordinates to determine walkability,
 -- warps, hazards, etc. Red channel encodes permission type.

@@ -1,4 +1,4 @@
-﻿-- vehicle.lua â€” Driveable/rideable entity support.
+-- vehicle.lua -- Driveable/rideable entity support.
 --
 -- Vehicles are interactable objects the player can enter and drive.
 -- Composition-based: a vehicle is just a table with driving stats.

@@ -1,4 +1,4 @@
-﻿-- animation.lua â€” Sprite sheet animation player.
+-- animation.lua -- Sprite sheet animation player.
 --
 -- Replaces the legacy animation library with a simpler, project-consistent API.
 -- Supports sprite sheets (uniform grid), per-frame duration, looping,

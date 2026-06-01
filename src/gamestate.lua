@@ -1,4 +1,4 @@
-﻿-- gamestate.lua â€” Shared game state machine for LOVE2D games.
+-- gamestate.lua -- Shared game state machine for LOVE2D games.
 --
 -- Manages the lifecycle: splash â†’ menu â†’ gameplay â†’ pause.
 -- Games provide a config file (game/config.json) and register

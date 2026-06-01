@@ -1,4 +1,4 @@
-﻿-- dialog.lua â€” NPC dialog overlay with portrait.
+-- dialog.lua -- NPC dialog overlay with portrait.
 --
 -- Shows a character portrait + paginated text at the bottom of the screen.
 -- Advancing through pages with confirm key, closes after last page.

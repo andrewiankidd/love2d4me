@@ -1,6 +1,6 @@
-﻿# love2d4me
+# love2d4me
 
-A shared LOVE2D game framework extracted from several legacy game projects (originally written ~2011) undergoing varying levels of revival and modernization. The framework centralizes common patterns â€” state management, input, collision, entity systems, projection, and more â€” so each game carries only its own game-specific logic.
+A shared LOVE2D game framework extracted from several legacy game projects (originally written ~2011) undergoing varying levels of revival and modernization. The framework centralizes common patterns -- state management, input, collision, entity systems, projection, and more -- so each game carries only its own game-specific logic.
 
 ## Quick Start
 
@@ -9,7 +9,7 @@ git submodule add https://github.com/andrewiankidd/love2d4me.git src/love2d4me
 ```
 
 ```lua
--- conf.lua (runs before love.load â€” direct require, not via init.lua)
+-- conf.lua (runs before love.load -- direct require, not via init.lua)
 local Conf = require("love2d4me.src.conf")
 function love.conf(t) Conf.apply(t) end
 
@@ -74,7 +74,7 @@ All game config lives in `game/config.json`:
 | Module | Description |
 |--------|-------------|
 | `npc` | Unified entity system. `NPC.load(name)` loads character data from `game/npcs/` or `game/mobs/`. `NPC.create_entity(config)` spawns entities with behavior (static, patrol) and interaction type (button, collision, seen). |
-| `interactable` | Generic in-world object registry. Proximity queries with `nearest(x, y, filter)`. Composition-based â€” objects are plain tables. |
+| `interactable` | Generic in-world object registry. Proximity queries with `nearest(x, y, filter)`. Composition-based -- objects are plain tables. |
 | `vehicle` | Enter/exit/drive pattern. Register presets per game. Builds on interactable registry. |
 
 ### Visual
@@ -141,11 +141,11 @@ game/
 
 | Red Channel | Permission | Usage |
 |-------------|-----------|-------|
-| 0 | solid | Black â€” impassable wall/boundary |
-| 64 | grapple | Dark â€” grapple/hook point |
-| 128 | hazard | Medium â€” instant death |
-| 150â€“154 | warp | Warp zones (index 0â€“4, mapped to config warps) |
-| 255 | walk | White â€” freely walkable |
+| 0 | solid | Black -- impassable wall/boundary |
+| 64 | grapple | Dark -- grapple/hook point |
+| 128 | hazard | Medium -- instant death |
+| 150--154 | warp | Warp zones (index 0--4, mapped to config warps) |
+| 255 | walk | White -- freely walkable |
 
 ## Entity Config Schema
 
@@ -179,7 +179,7 @@ Place a `portable.txt` file beside the game binary. All data writes go to `./<id
 
 ## Projects
 
-- [legacy-lua-fotd](https://github.com/andrewiankidd/legacy-lua-fotd) â€” Fear of the Dark (top-down RPG)
-- [legacy-lua-platformer](https://github.com/andrewiankidd/legacy-lua-platformer) â€” 2D Platformer
-- [legacy-lua-mode7](https://github.com/andrewiankidd/legacy-lua-mode7) â€” Mode 7 experiment
-- [legacy-lua-25d](https://github.com/andrewiankidd/legacy-lua-25d) â€” G-Town (2.5D driving)
+- [legacy-lua-fotd](https://github.com/andrewiankidd/legacy-lua-fotd) -- Fear of the Dark (top-down RPG)
+- [legacy-lua-platformer](https://github.com/andrewiankidd/legacy-lua-platformer) -- 2D Platformer
+- [legacy-lua-mode7](https://github.com/andrewiankidd/legacy-lua-mode7) -- Mode 7 experiment
+- [legacy-lua-25d](https://github.com/andrewiankidd/legacy-lua-25d) -- G-Town (2.5D driving)

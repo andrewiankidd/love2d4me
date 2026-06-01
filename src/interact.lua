@@ -1,4 +1,4 @@
-﻿-- interact.lua â€” Interaction routing.
+-- interact.lua -- Interaction routing.
 --
 -- Dispatches interactions with NPCs, items, or other objects.
 -- Games register handlers; the module routes by object type.

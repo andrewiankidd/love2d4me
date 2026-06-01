@@ -1,4 +1,4 @@
-﻿# love2d-common
+# love2d-common
 
 Shared Lua modules for LOVE2D game projects.
 
@@ -17,7 +17,7 @@ See [input.md](input.md) for full API reference.
 Shared `love.conf` helper. Applies sensible defaults and loads saved window preferences (resolution, fullscreen, vsync) from `settings.json` before the window opens.
 
 ### storage.lua
-All disk I/O goes through this module. Detects portable mode via a `portable.txt` file beside the binary â€” if present, reads/writes to `./<identity>/`. Otherwise uses the user's home directory.
+All disk I/O goes through this module. Detects portable mode via a `portable.txt` file beside the binary -- if present, reads/writes to `./<identity>/`. Otherwise uses the user's home directory.
 
 See [storage.md](storage.md) for full API reference.
 
