@@ -31,7 +31,6 @@ local GameState = {}
 local state = "splash"
 local config = {}
 local callbacks = {}
-local paused = false
 local custom_states = {}
 local loading_done = false
 local loading_started = false
@@ -186,7 +185,6 @@ local function build_pause_menu()
             { label = "Resume", action = function()
                 Menu.clear()
                 state = "gameplay"
-                paused = false
             end },
             { label = "Options", action = function()
                 Menu.push(build_options_menu())
@@ -486,7 +484,6 @@ function GameState.keypressed(key)
     elseif state == "gameplay" then
         if key == "escape" or key == "p" then
             state = "pause"
-            paused = true
             Menu.push(build_pause_menu())
         elseif callbacks.on_gameplay_keypressed then
             callbacks.on_gameplay_keypressed(key)
