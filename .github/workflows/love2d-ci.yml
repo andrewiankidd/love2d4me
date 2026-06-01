@@ -1,4 +1,4 @@
-﻿name: LOVE2D Build and Deploy (Reusable)
+name: LOVE2D Build and Deploy (Reusable)
 
 on:
   workflow_call:
@@ -6,11 +6,11 @@ on:
       project_name:
         required: true
         type: string
-        description: "Human-readable project name (e.g. 'Fear of the Dark')"
+        description: "Human-readable project name"
       love_filename:
         required: true
         type: string
-        description: "Base name for the .love file without extension (e.g. 'FotD')"
+        description: "Base name for the .love file without extension"
       branch:
         required: false
         type: string
@@ -19,11 +19,11 @@ on:
 
 jobs:
   lint:
-    name: Lint ðŸ”
+    name: Lint
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           submodules: recursive
 
@@ -44,19 +44,19 @@ jobs:
           cp src/love2d4me/.luacheckrc .luacheckrc 2>/dev/null || true
           cp src/love2d4me/.stylua.toml .stylua.toml 2>/dev/null || true
 
-      - name: Luacheck â€” static analysis
+      - name: Luacheck
         run: luacheck src/ --exclude-files "src/lib/*"
 
-      - name: StyLua â€” format check
+      - name: StyLua
         run: stylua --check src/ --glob "**/*.lua" --exclude "src/lib/**"
 
   build:
-    name: Build ðŸ› ï¸
+    name: Build
     runs-on: ubuntu-latest
     needs: lint
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           submodules: recursive
 
@@ -90,13 +90,13 @@ jobs:
           path: ${{ inputs.love_filename }}-love.zip
 
   release_rolling:
-    name: ðŸ”„ Refresh latest-main release
+    name: Refresh latest-main release
     runs-on: ubuntu-latest
     needs: build
     if: github.ref == format('refs/heads/{0}', inputs.branch)
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Download all build artifacts
         uses: actions/download-artifact@v4
@@ -123,13 +123,13 @@ jobs:
           files: dist/${{ inputs.love_filename }}-love.zip
 
   release_tag:
-    name: ðŸ·ï¸ Create tagged release
+    name: Create tagged release
     runs-on: ubuntu-latest
     needs: build
     if: startsWith(github.ref, 'refs/tags/v')
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Download all build artifacts
         uses: actions/download-artifact@v4
@@ -146,13 +146,13 @@ jobs:
           files: dist/${{ inputs.love_filename }}-love.zip
 
   deploy:
-    name: Deploy to GitHub Pages ðŸ•¸ï¸
+    name: Deploy to GitHub Pages
     runs-on: ubuntu-latest
     needs: build
     if: github.ref == format('refs/heads/{0}', inputs.branch)
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           submodules: recursive
 
@@ -165,9 +165,7 @@ jobs:
       - name: Assemble site
         run: |
           mkdir -p site
-          # Shared template from love2d4me (provides index.html)
           cp -r src/love2d4me/site/* site/ 2>/dev/null || true
-          # Project-specific pages overlay (site.json, logo, extras)
           cp -r .github/pages/* site/
           mv Web site/Web
           cp CHANGELOG.md site/ 2>/dev/null || true
