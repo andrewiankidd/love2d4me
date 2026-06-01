@@ -1,0 +1,9 @@
+[lints]
+empty_if = "warn"
+if_same_then_else = "warn"
+multiple_statements = "warn"
+parenthese_conditions = "warn"
+unbalanced_assignments = "warn"
+undefined_variable = "warn"
+unused_variable = "warn"
+shadowing = "allow"
