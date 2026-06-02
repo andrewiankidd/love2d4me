@@ -191,7 +191,7 @@ function Battle.draw()
     end
     if bg_image then
         love.graphics.setColor(1, 1, 1, 1)
-        love.graphics.draw(bg_image, 0, 0)
+        draw_fullscreen(bg_image)
     end
 
     -- Player sprite

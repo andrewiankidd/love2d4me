@@ -111,7 +111,8 @@ local function draw_grid(m, sw, sh)
 
     if m.background then
         love.graphics.setColor(1, 1, 1, 1)
-        love.graphics.draw(m.background, 0, 0)
+        local bw, bh = m.background:getDimensions()
+        love.graphics.draw(m.background, 0, 0, 0, sw / bw, sh / bh)
     end
 
     local tc = m.title_color or { 0.95, 0.82, 0.18 }
@@ -160,10 +161,11 @@ function Menu.draw()
         return
     end
 
-    -- Background
+    -- Background (stretch to fill canvas)
     if current_menu.background then
         love.graphics.setColor(1, 1, 1, 1)
-        love.graphics.draw(current_menu.background, 0, 0)
+        local bw, bh = current_menu.background:getDimensions()
+        love.graphics.draw(current_menu.background, 0, 0, 0, sw / bw, sh / bh)
     end
 
     local prev_font = love.graphics.getFont()

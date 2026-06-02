@@ -391,7 +391,7 @@ function GameState.draw()
         end
         if _loading_bg_img then
             love.graphics.setColor(1, 1, 1, 1)
-            love.graphics.draw(_loading_bg_img, 0, 0)
+            draw_fullscreen(_loading_bg_img)
         end
         -- Loading text with animated dots
         love.graphics.setColor(1, 1, 1, 1)
@@ -437,7 +437,7 @@ function GameState.draw()
                     _death_bg_y = math.min((_death_bg_y or -sh) + 15, 0)
                     love.graphics.draw(_death_bg_img, 0, _death_bg_y)
                 else
-                    love.graphics.draw(_death_bg_img, 0, 0)
+                    draw_fullscreen(_death_bg_img)
                 end
             end
         end

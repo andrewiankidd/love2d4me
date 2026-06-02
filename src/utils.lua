@@ -69,6 +69,12 @@ function distance(x1, y1, x2, y2)
     return math.sqrt(dx * dx + dy * dy)
 end
 
+function draw_fullscreen(image)
+    local sw, sh = love.graphics.getDimensions()
+    local iw, ih = image:getDimensions()
+    love.graphics.draw(image, 0, 0, 0, sw / iw, sh / ih)
+end
+
 local _image_cache = {}
 function get_image(path)
     if _image_cache[path] == nil then

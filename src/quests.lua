@@ -140,7 +140,7 @@ function Quests.draw()
     end
     if overlay_image then
         love.graphics.setColor(1, 1, 1, 1)
-        love.graphics.draw(overlay_image, 0, 0)
+        draw_fullscreen(overlay_image)
     end
 
     local left_w = sw * 0.45

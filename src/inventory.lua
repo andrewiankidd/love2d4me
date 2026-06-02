@@ -129,7 +129,7 @@ function Inventory.draw()
     end
     if overlay_image then
         love.graphics.setColor(1, 1, 1, 1)
-        love.graphics.draw(overlay_image, 0, 0)
+        draw_fullscreen(overlay_image)
     end
     love.graphics.setColor(0.2, 0.2, 0.2, 1)
     love.graphics.printf("INVENTORY", 50, 35, sw * 0.45, 'left')
