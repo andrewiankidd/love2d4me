@@ -39,6 +39,7 @@ return {
     -- Combat
     equipment     = require(BASE .. "equipment"),
     hud           = require(BASE .. "hud"),
+    scoring       = require(BASE .. "scoring"),
 
     -- Visual
     parallax      = require(BASE .. "parallax"),

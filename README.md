@@ -9,13 +9,14 @@ git submodule add https://github.com/andrewiankidd/love2d4me.git src/love2d4me
 ```
 
 ```lua
--- conf.lua (runs before love.load -- direct require, not via init.lua)
+-- conf.lua (direct require -- conf runs before love.load, so init.lua
+-- can't be used here as it loads modules that need love.graphics)
 local Conf = require("love2d4me.src.conf")
 function love.conf(t) Conf.apply(t) end
 
--- main.lua
-local L = require("love2d4me")
-local GameState = L.gamestate
+-- main.lua (single require gives access to all modules)
+local Love2D4Me = require("love2d4me")
+local GameState = Love2D4Me.gamestate
 
 function love.load()
     GameState.init({

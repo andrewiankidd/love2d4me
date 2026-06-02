@@ -47,6 +47,9 @@ jobs:
       - name: Luacheck
         run: luacheck src/ --exclude-files "src/lib/*"
 
+      - name: Lint variables
+        run: node src/love2d4me/scripts/lint-vars.js src
+
       - name: StyLua
         run: stylua --check src/ --glob "**/*.lua" || echo "StyLua warnings (non-blocking)"
 
