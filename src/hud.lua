@@ -17,6 +17,7 @@ local weapon_name = nil
 local cooldown_ratio = 0
 local damage_flash = 0
 local control_hints = nil
+local money = nil
 
 function HUD.set_health(current, maximum)
     health = current or health
@@ -26,6 +27,10 @@ end
 function HUD.set_weapon(name, cd_ratio)
     weapon_name = name
     cooldown_ratio = cd_ratio or 0
+end
+
+function HUD.set_money(value)
+    money = value
 end
 
 function HUD.flash_damage()
@@ -77,6 +82,18 @@ function HUD.draw()
                 love.graphics.setColor(1, 1, 1, 0.3)
                 love.graphics.rectangle("fill", wx, wy + 18, 76 * cooldown_ratio, 3)
             end
+        end
+
+        -- Money display (below weapon)
+        if money then
+            local my = bar_y + bar_h + 8 + (weapon_name and 32 or 0)
+            local label = "$" .. money
+            love.graphics.setColor(0, 0, 0, 0.6)
+            love.graphics.rectangle("fill", 10, my - 2, 80, 20, 2, 2)
+            love.graphics.setColor(0.4, 1, 0.4, 1)
+            love.graphics.rectangle("fill", 14, my + 4, 8, 8)
+            love.graphics.setColor(1, 1, 1, 0.95)
+            love.graphics.print(label, 28, my + 2)
         end
     end
 
