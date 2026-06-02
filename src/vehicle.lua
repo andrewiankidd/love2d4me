@@ -62,20 +62,36 @@ function Vehicle.enter(vehicle)
     return false
 end
 
-function Vehicle.exit(px, py, angle)
-    if current then
-        current.x = px
-        current.y = py
-        current.angle = angle or 0
-        local ca, sa = math.cos(angle or 0), math.sin(angle or 0)
-        local offset = (current.w or 4) / 2 + 2
-        local exit_x = px + ca * offset
-        local exit_y = py + sa * offset
-        Log.info("Vehicle.exit", { kind = current.kind })
-        current = nil
-        return true, exit_x, exit_y
+function Vehicle.exit(px, py, angle, blocked_fn)
+    if not current then return false end
+    current.x = px
+    current.y = py
+    current.angle = angle or 0
+    local a = angle or 0
+    local ca, sa = math.cos(a), math.sin(a)
+    -- right (ca, sa), forward (-sa, ca) match the car's own coord system used elsewhere
+    local right_x, right_y = ca, sa
+    local fwd_x, fwd_y = -sa, ca
+    local off_side = (current.w or 4) / 2 + 2
+    local off_end = (current.h or 8) / 2 + 2
+    local sides = {
+        { px + right_x * off_side, py + right_y * off_side },  -- right
+        { px - right_x * off_side, py - right_y * off_side },  -- left
+        { px + fwd_x * off_end,   py + fwd_y * off_end },      -- front
+        { px - fwd_x * off_end,   py - fwd_y * off_end },      -- back
+    }
+    local exit_x, exit_y = sides[1][1], sides[1][2]
+    if blocked_fn then
+        for _, side in ipairs(sides) do
+            if not blocked_fn(side[1], side[2]) then
+                exit_x, exit_y = side[1], side[2]
+                break
+            end
+        end
     end
-    return false
+    Log.info("Vehicle.exit", { kind = current.kind })
+    current = nil
+    return true, exit_x, exit_y
 end
 
 function Vehicle.is_driving()
