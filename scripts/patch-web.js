@@ -38,4 +38,13 @@ if (fs.existsSync(themeDir)) {
     fs.rmSync(themeDir, { recursive: true });
 }
 
+// Copy coi-serviceworker so SharedArrayBuffer / cross-origin isolation works on GitHub Pages.
+// Required by newer love.js builds (pthreads / WASM threads). Registers a service worker on
+// first load that synthesises COOP/COEP headers locally — the page reloads once and SAB works.
+const swSrc = path.join(__dirname, '..', 'site', 'coi-serviceworker.min.js');
+const swDst = path.join(webDir, 'coi-serviceworker.min.js');
+if (fs.existsSync(swSrc)) {
+    fs.copyFileSync(swSrc, swDst);
+}
+
 console.log('Web/index.html patched — minimal game template applied');
