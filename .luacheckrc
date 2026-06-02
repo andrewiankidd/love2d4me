@@ -18,6 +18,7 @@ globals = {
     "lerp",
     "distance",
     "get_image",
+    "draw_fullscreen",
     "table.maxn",
     "loadmap",
     "interact",
