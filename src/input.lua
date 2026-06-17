@@ -3,7 +3,8 @@
 -- Drop this file into any LOVE2D project. It provides:
 --   - Unified action mapping (semantic names like "up", "confirm" instead of raw keys)
 --   - Keyboard + touch input from a single API
---   - Auto-detection of touch devices
+--   - Auto-detection of touch devices (sticky once a touch is seen, so
+--     on-screen controls stay visible for the session on web/mobile)
 --   - On-screen virtual buttons (rendered automatically on touch devices)
 --   - Runtime switching between input modes
 --
@@ -53,6 +54,11 @@ local function detect_touch()
     if love.mouse and love.mouse.isCursorSupported and not love.mouse.isCursorSupported() then
         return true
     end
+    -- Sticky: once any touch has been seen this session, keep on-screen
+    -- controls visible even when no fingers are currently down. Without
+    -- this, mobile web users see the controls flash on tap and vanish
+    -- on release, leaving the game unplayable.
+    if is_touch then return true end
     local touch = love.touch
     if touch and touch.getTouches then
         local touches = touch.getTouches()
