@@ -141,6 +141,7 @@ local function draw_grid(m, sw, sh)
         love.graphics.print(entry.label,
             math.floor(x + (tw - entry_font:getWidth(entry.label)) / 2),
             math.floor(y + (th - entry_font:getHeight()) / 2))
+        entry._rect = { x = x, y = y, w = tw, h = th }
     end
 
     if m.hint then
@@ -211,7 +212,9 @@ function Menu.draw()
         else
             love.graphics.setColor(1, 1, 1, 1)
         end
-        love.graphics.printf(entry.label, 0, start_y + (i - 1) * spacing, sw, "center")
+        local entry_y = start_y + (i - 1) * spacing
+        love.graphics.printf(entry.label, 0, entry_y, sw, "center")
+        entry._rect = { x = 0, y = entry_y, w = sw, h = spacing }
     end
 
     love.graphics.setFont(prev_font)
@@ -221,6 +224,29 @@ end
 function Menu.get_index()
     local current_menu = current()
     return current_menu and current_menu.index or 0
+end
+
+-- Tap / click activation. Hit-tests the entry rectangles captured during
+-- Menu.draw (entry._rect). On match: select that entry and run its action.
+-- Coordinates are in screen-space — Menu draws outside Resolution.render so
+-- the rects are stored in the same space as love.touchpressed / mousepressed.
+function Menu.touchpressed(x, y)
+    local current_menu = current()
+    if not current_menu then return false end
+    for i, entry in ipairs(current_menu.entries) do
+        local r = entry._rect
+        if r and x >= r.x and x <= r.x + r.w and y >= r.y and y <= r.y + r.h then
+            current_menu.index = i
+            if entry.action then entry.action() end
+            return true
+        end
+    end
+    return false
+end
+
+function Menu.mousepressed(x, y, button)
+    if button ~= 1 then return false end
+    return Menu.touchpressed(x, y)
 end
 
 return Menu

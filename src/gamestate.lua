@@ -13,7 +13,10 @@
 --   })
 --
 -- The module takes over love.update, love.draw, love.keypressed.
--- Games only implement gameplay logic.
+-- It also auto-wires love.touchpressed and love.mousepressed so tap /
+-- click works for splash skip, menu navigation, and gameplay (forwarded
+-- to Input for on-screen virtual buttons). Games only implement
+-- gameplay logic.
 
 local Splash = require("love2d4me.src.splash")
 local Menu = require("love2d4me.src.menu")
@@ -304,6 +307,12 @@ function GameState.init(opts)
             Menu.push(build_main_menu())
         end,
     })
+
+    -- Auto-wire tap / click dispatch. Games using GameState don't need to add
+    -- love.touchpressed / love.mousepressed in their main.lua; if they want
+    -- custom handling they can reassign these after calling GameState.init.
+    love.touchpressed = function(id, x, y) GameState.touchpressed(id, x, y) end
+    love.mousepressed = function(x, y, button) GameState.mousepressed(x, y, button) end
 end
 
 function GameState.get_state()
@@ -513,6 +522,38 @@ function GameState.keyreleased(key)
         callbacks.on_gameplay_keyreleased(key)
     elseif custom_states[state] and custom_states[state].keyreleased then
         custom_states[state].keyreleased(key)
+    end
+end
+
+-- Tap / click dispatch: splash skips, menus hit-test entries, gameplay
+-- forwards to Input (for on-screen virtual buttons) and the game's
+-- optional touch/mouse callbacks. love.touchpressed and love.mousepressed
+-- are wired automatically at the end of GameState.init so games don't
+-- need to add boilerplate in their main.lua.
+function GameState.touchpressed(id, x, y)
+    if state == "splash" then
+        Splash.skip()
+    elseif state == "menu" or state == "pause" then
+        Menu.touchpressed(x, y)
+    elseif state == "gameplay" then
+        Input.touchpressed(id, x, y)
+        if callbacks.on_gameplay_touchpressed then
+            callbacks.on_gameplay_touchpressed(id, x, y)
+        end
+    elseif custom_states[state] and custom_states[state].touchpressed then
+        custom_states[state].touchpressed(id, x, y)
+    end
+end
+
+function GameState.mousepressed(x, y, button)
+    if state == "splash" then
+        if button == 1 then Splash.skip() end
+    elseif state == "menu" or state == "pause" then
+        Menu.mousepressed(x, y, button)
+    elseif state == "gameplay" and callbacks.on_gameplay_mousepressed then
+        callbacks.on_gameplay_mousepressed(x, y, button)
+    elseif custom_states[state] and custom_states[state].mousepressed then
+        custom_states[state].mousepressed(x, y, button)
     end
 end
 
