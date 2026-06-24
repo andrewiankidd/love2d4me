@@ -10,13 +10,12 @@
       html, body { margin: 0; width: 100%; height: 100%; overflow: hidden; background: #000; }
       h1, footer { display: none; }
       #loadingCanvas { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); }
-      #canvas-wrap { position: absolute; transform-origin: top left; visibility: hidden; }
       #canvas { display: block; border: 0; padding: 0; }
     </style>
   </head>
   <body>
     <canvas id="loadingCanvas" oncontextmenu="event.preventDefault()" width="800" height="600"></canvas>
-    <div id="canvas-wrap"><canvas id="canvas" oncontextmenu="event.preventDefault()"></canvas></div>
+    <canvas id="canvas" oncontextmenu="event.preventDefault()"></canvas>
 
     <script type='text/javascript'>
       function goFullScreen(){
@@ -99,27 +98,23 @@
 
     <script>
     (function() {
-        function fitCanvas() {
+        var kicked = false;
+        function watchCanvas() {
             var c = document.getElementById('canvas');
-            var w = document.getElementById('canvas-wrap');
-            if (!c || !w) return requestAnimationFrame(fitCanvas);
-            console.log('[fitCanvas] canvas=' + c.width + 'x' + c.height +
-                ' style=' + c.style.width + '/' + c.style.height +
-                ' vw=' + window.innerWidth + ' vh=' + window.innerHeight +
-                ' visible=' + w.style.visibility);
-            if (c.width < 2 || c.height < 2) {
-                requestAnimationFrame(fitCanvas);
+            if (!c) return requestAnimationFrame(watchCanvas);
+            // love.js with resizable=true starts at 2x2 and waits for a
+            // resize event before sizing the canvas to the window.
+            // Keep firing synthetic resizes until it wakes up.
+            if (c.width <= 2 || c.height <= 2) {
+                if (!kicked) console.log('[watchCanvas] canvas stuck at ' + c.width + 'x' + c.height + ', dispatching resize');
+                kicked = true;
+                window.dispatchEvent(new Event('resize'));
+                requestAnimationFrame(watchCanvas);
                 return;
             }
-            var vw = window.innerWidth, vh = window.innerHeight;
-            var s = Math.min(vw / c.width, vh / c.height);
-            w.style.left = Math.round((vw - c.width * s) / 2) + 'px';
-            w.style.top = Math.round((vh - c.height * s) / 2) + 'px';
-            w.style.transform = 'scale(' + s + ')';
-            w.style.visibility = 'visible';
-            requestAnimationFrame(fitCanvas);
+            if (kicked) console.log('[watchCanvas] canvas alive at ' + c.width + 'x' + c.height);
         }
-        requestAnimationFrame(fitCanvas);
+        requestAnimationFrame(watchCanvas);
     })();
     </script>
   </body>
