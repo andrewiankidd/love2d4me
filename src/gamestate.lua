@@ -430,7 +430,9 @@ function GameState.init(opts)
     -- love.touchpressed / love.mousepressed in their main.lua; if they want
     -- custom handling they can reassign these after calling GameState.init.
     love.touchpressed = function(id, x, y) GameState.touchpressed(id, x, y) end
+    love.touchreleased = function(id, x, y) GameState.touchreleased(id, x, y) end
     love.mousepressed = function(x, y, button) GameState.mousepressed(x, y, button) end
+    love.mousereleased = function(x, y, button) GameState.mousereleased(x, y, button) end
 end
 
 function GameState.get_state()
