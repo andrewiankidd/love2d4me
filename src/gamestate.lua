@@ -276,7 +276,7 @@ function GameState.init(opts)
     local os_name = love.system.getOS()
     local dw, dh = love.window.getDesktopDimensions(1)
     local gfx_w, gfx_h = love.graphics.getDimensions()
-    Log.info("Pre-setMode", {
+    Log.debug("Pre-setMode", {
         os = os_name,
         config = cfg_w .. "x" .. cfg_h,
         desktop = dw .. "x" .. dh,
@@ -284,7 +284,7 @@ function GameState.init(opts)
     })
     love.window.setMode(cfg_w, cfg_h, { resizable = true })
     local post_w, post_h = love.graphics.getDimensions()
-    Log.info("Post-setMode", { requested = cfg_w .. "x" .. cfg_h, actual = post_w .. "x" .. post_h })
+    Log.debug("Post-setMode", { requested = cfg_w .. "x" .. cfg_h, actual = post_w .. "x" .. post_h })
 
     -- Identity derived from title (save directory per game)
     local identity = config.identity or config.title or "love2d-game"
@@ -362,7 +362,7 @@ function GameState.init(opts)
         end
         if cur_os == "Web" then
             local w, h = love.window.getDesktopDimensions(1)
-            Log.info("Skin platform check (Web)", { desktop_dims = w .. "x" .. h, threshold = "800x600" })
+            Log.debug("Skin platform check (Web)", { desktop_dims = w .. "x" .. h, threshold = "800x600" })
             if w <= 800 or h <= 600 then return ps.mobile end
             return ps.desktop
         end
@@ -373,7 +373,7 @@ function GameState.init(opts)
     local skin_from_platform = platform_default_skin()
     local skin_from_config = config.default_skin
     local skin_name = skin_from_args or skin_from_settings or skin_from_platform or skin_from_config
-    Log.info("Skin selection", {
+    Log.debug("Skin selection", {
         chosen = tostring(skin_name),
         from_args = tostring(skin_from_args),
         from_settings = tostring(skin_from_settings),
@@ -382,10 +382,10 @@ function GameState.init(opts)
     })
     if skin_name and Skin.init(skin_name, game_w, game_h) then
         local skin_w, skin_h = Skin.get_dimensions()
-        Log.info("Skin setMode", { skin = skin_name, target = skin_w .. "x" .. skin_h })
+        Log.debug("Skin setMode", { skin = skin_name, target = skin_w .. "x" .. skin_h })
         love.window.setMode(skin_w, skin_h, { resizable = true })
         local actual_w, actual_h = love.graphics.getDimensions()
-        Log.info("Skin post-setMode", { requested = skin_w .. "x" .. skin_h, actual = actual_w .. "x" .. actual_h })
+        Log.debug("Skin post-setMode", { requested = skin_w .. "x" .. skin_h, actual = actual_w .. "x" .. actual_h })
         Resolution.set(res_mode, skin_w, skin_h, skin_w, skin_h)
         Input.set_buttons(Skin.get_buttons())
         Input.set_draw_enabled(false)
