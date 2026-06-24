@@ -162,6 +162,21 @@ jobs:
             cd love-runtime && unzip -q love-download && rm love-download
           fi
 
+      - name: Cache 7z SFX stub
+        if: matrix.platform == 'windows'
+        id: sfx-cache
+        uses: actions/cache@v4
+        with:
+          path: 7z-sfx
+          key: 7z-sfx-v1
+
+      - name: Download 7z SFX stub
+        if: matrix.platform == 'windows' && steps.sfx-cache.outputs.cache-hit != 'true'
+        run: |
+          mkdir -p 7z-sfx
+          curl -sL "https://www.7-zip.org/a/7z2409-extra.7z" -o 7z-extra.7z
+          7z x 7z-extra.7z -o7z-sfx 7zS2.sfx
+
       - name: Fuse (Windows)
         if: matrix.platform == 'windows'
         run: |
@@ -170,7 +185,14 @@ jobs:
           cat "${LOVE_DIR}/love.exe" "${{ inputs.love_filename }}.love" > "out/${{ inputs.love_filename }}.exe"
           cp "${LOVE_DIR}"/*.dll out/
           cp "${LOVE_DIR}/license.txt" out/ 2>/dev/null || true
-          cd out && zip -r "../${{ inputs.love_filename }}-windows.zip" .
+
+          # SFX config — extract to temp dir and run the fused exe
+          printf ';!@Install@!UTF-8!\nRunProgram="%s.exe"\n;!@InstallEnd@!\n' \
+            "${{ inputs.love_filename }}" > sfx_config.txt
+
+          # Pack into single self-extracting exe
+          7z a -mx=9 -mmt=on game.7z ./out/*
+          cat 7z-sfx/7zS2.sfx sfx_config.txt game.7z > "${{ inputs.love_filename }}-windows.exe"
 
       - name: Fuse (macOS)
         if: matrix.platform == 'macos'
@@ -195,7 +217,9 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: ${{ matrix.artifact }}-release
-          path: ${{ inputs.love_filename }}-${{ matrix.artifact }}.*
+          path: |
+            ${{ inputs.love_filename }}-${{ matrix.artifact }}.exe
+            ${{ inputs.love_filename }}-${{ matrix.artifact }}.zip
 
   build_android:
     name: 'Android 🤖'
@@ -280,13 +304,12 @@ jobs:
       - name: Collect APK
         run: |
           find love-android/app/build/outputs/apk -name "*.apk" -exec cp {} "${{ inputs.love_filename }}-android.apk" \;
-          zip "${{ inputs.love_filename }}-android.zip" "${{ inputs.love_filename }}-android.apk"
 
       - name: Upload Android artifact
         uses: actions/upload-artifact@v4
         with:
           name: android-release
-          path: ${{ inputs.love_filename }}-android.*
+          path: ${{ inputs.love_filename }}-android.apk
 
   # TODO: iOS build requires macos-latest runner + Xcode + Apple Developer
   # signing identity (provisioning profile + certificate). Not feasible
@@ -310,14 +333,12 @@ jobs:
       - name: Prepare release files
         run: |
           mkdir -p release
-          # .love file
           cd dist
           zip "../release/${{ inputs.love_filename }}-love.zip" "${{ inputs.love_filename }}.love" 2>/dev/null || true
-          # Platform builds (already zipped)
-          cp ${{ inputs.love_filename }}-windows.zip ../release/ 2>/dev/null || true
+          cp ${{ inputs.love_filename }}-windows.exe ../release/ 2>/dev/null || true
           cp ${{ inputs.love_filename }}-macos.zip ../release/ 2>/dev/null || true
           cp ${{ inputs.love_filename }}-linux.zip ../release/ 2>/dev/null || true
-          cp ${{ inputs.love_filename }}-android.zip ../release/ 2>/dev/null || true
+          cp ${{ inputs.love_filename }}-android.apk ../release/ 2>/dev/null || true
           cd ..
           echo "Release files:"
           ls -lh release/
@@ -341,10 +362,10 @@ jobs:
 
             | Platform | |
             |---|---|
-            | 🪟 Windows | `${{ inputs.love_filename }}-windows.zip` |
+            | 🪟 Windows | `${{ inputs.love_filename }}-windows.exe` |
             | 🍎 macOS | `${{ inputs.love_filename }}-macos.zip` |
             | 🐧 Linux | `${{ inputs.love_filename }}-linux.zip` |
-            | 🤖 Android | `${{ inputs.love_filename }}-android.zip` |
+            | 🤖 Android | `${{ inputs.love_filename }}-android.apk` |
             | 🌐 Web | [Play in browser](https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/Web/) |
             | 💜 .love | `${{ inputs.love_filename }}-love.zip` |
           files: release/*
@@ -369,10 +390,10 @@ jobs:
           mkdir -p release
           cd dist
           zip "../release/${{ inputs.love_filename }}-love.zip" "${{ inputs.love_filename }}.love" 2>/dev/null || true
-          cp ${{ inputs.love_filename }}-windows.zip ../release/ 2>/dev/null || true
+          cp ${{ inputs.love_filename }}-windows.exe ../release/ 2>/dev/null || true
           cp ${{ inputs.love_filename }}-macos.zip ../release/ 2>/dev/null || true
           cp ${{ inputs.love_filename }}-linux.zip ../release/ 2>/dev/null || true
-          cp ${{ inputs.love_filename }}-android.zip ../release/ 2>/dev/null || true
+          cp ${{ inputs.love_filename }}-android.apk ../release/ 2>/dev/null || true
           cd ..
           ls -lh release/
 
