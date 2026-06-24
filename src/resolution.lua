@@ -27,10 +27,12 @@ local dy = 0
 local xscale = 1
 local yscale = 1
 local rw, rh
+local render_scale = 1
+local render_canvas = nil
 
 local Resolution = {}
 
-function Resolution.set(mode, game_width, game_height, screen_width, screen_height)
+function Resolution.set(mode, game_width, game_height, screen_width, screen_height, opts)
     if mode == "fit" then
         local aspect = game_width / game_height
         local gw, gh = aspect * screen_height, screen_height
@@ -72,17 +74,46 @@ function Resolution.set(mode, game_width, game_height, screen_width, screen_heig
         rw = game_width
         rh = game_height
     end
+
+    opts = opts or {}
+    render_scale = opts.render_scale or 1
+    if render_scale > 1 then
+        render_canvas = lg.newCanvas(game_width * render_scale, game_height * render_scale)
+        render_canvas:setFilter("linear", "linear")
+    else
+        render_canvas = nil
+    end
+
     return Resolution
 end
 
 function Resolution.render(draw, ...)
-    lg.push()
-    lg.setScissor(dx, dy, rw, rh)
-    lg.translate(dx, dy)
-    lg.scale(xscale, yscale)
-    draw(...)
-    lg.setScissor()
-    lg.pop()
+    if render_canvas then
+        lg.setCanvas(render_canvas)
+        lg.clear(0, 0, 0, 1)
+        lg.push()
+        lg.origin()
+        lg.scale(render_scale, render_scale)
+        draw(...)
+        lg.pop()
+        lg.setCanvas()
+
+        lg.push()
+        lg.setScissor(dx, dy, rw, rh)
+        lg.translate(dx, dy)
+        lg.scale(xscale / render_scale, yscale / render_scale)
+        lg.draw(render_canvas, 0, 0)
+        lg.setScissor()
+        lg.pop()
+    else
+        lg.push()
+        lg.setScissor(dx, dy, rw, rh)
+        lg.translate(dx, dy)
+        lg.scale(xscale, yscale)
+        draw(...)
+        lg.setScissor()
+        lg.pop()
+    end
     return Resolution
 end
 

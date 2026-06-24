@@ -140,8 +140,11 @@ function Skin.init(skin_name, game_w, game_h)
     active_skin._dir = dir
     active_skin._game_w = game_w
     active_skin._game_h = game_h
+    active_skin._render_scale = data.render_scale or 1
 
-    game_canvas = lg.newCanvas(game_w, game_h)
+    local rs = active_skin._render_scale
+    game_canvas = lg.newCanvas(game_w * rs, game_h * rs)
+    game_canvas:setFilter("linear", "linear")
 
     if data.shell then
         shell_image = load_image(dir .. data.shell)
@@ -199,13 +202,15 @@ function Skin.render(game_draw_fn, resolution_module)
         return
     end
 
-    -- Render game to offscreen canvas at native resolution.
+    -- Render game to offscreen canvas (optionally at render_scale× resolution).
     -- Override getDimensions/getWidth/getHeight so UI code that centers
-    -- relative to "screen size" uses the game canvas size, not the window.
+    -- relative to "screen size" uses the logical game size, not the canvas.
+    local rs = active_skin._render_scale or 1
     lg.setCanvas(game_canvas)
     lg.clear(0, 0, 0, 1)
     lg.push()
     lg.origin()
+    if rs > 1 then lg.scale(rs, rs) end
     local real_getDimensions = lg.getDimensions
     local real_getWidth = lg.getWidth
     local real_getHeight = lg.getHeight
@@ -248,9 +253,9 @@ function Skin.render(game_draw_fn, resolution_module)
                 lg.rectangle("fill", vp.x - pad, vp.y - pad, vp.width + pad * 2, vp.height + pad * 2, 2, 2)
             end
 
-            -- Scale game canvas to fit viewport
-            local scale_x = vp.width / active_skin._game_w
-            local scale_y = vp.height / active_skin._game_h
+            -- Scale game canvas to fit viewport (canvas may be render_scale× larger)
+            local scale_x = vp.width / game_canvas:getWidth()
+            local scale_y = vp.height / game_canvas:getHeight()
 
             if overlay_shader then
                 lg.setShader(overlay_shader)

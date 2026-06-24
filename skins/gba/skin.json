@@ -2,13 +2,14 @@
     "name": "Handheld (Wide)",
     "width": 560,
     "height": 320,
+    "render_scale": 2,
     "background": "#2d1b4e",
     "orientation": "landscape",
     "viewport": {
-        "x": 150,
+        "x": 140,
         "y": 10,
-        "width": 260,
-        "height": 260
+        "width": 280,
+        "height": 270
     },
     "viewport_border": true,
     "buttons": [

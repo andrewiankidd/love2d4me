@@ -2,6 +2,7 @@
     "name": "Clean",
     "width": 640,
     "height": 480,
+    "render_scale": 2,
     "background": "#1a1a2e",
     "viewport": {
         "x": 0,

@@ -395,8 +395,9 @@ function GameState.init(opts)
         Log.info("Resolution initialized (skin)", { mode = res_mode, skin = skin_w .. "x" .. skin_h, game = game_w .. "x" .. game_h })
     else
         local screen_w, screen_h = love.graphics.getDimensions()
-        Resolution.set(res_mode, game_w, game_h, screen_w, screen_h)
-        Log.info("Resolution initialized (no skin)", { mode = res_mode, game = game_w .. "x" .. game_h, screen = screen_w .. "x" .. screen_h })
+        local rs = config.render_scale or 1
+        Resolution.set(res_mode, game_w, game_h, screen_w, screen_h, { render_scale = rs })
+        Log.info("Resolution initialized (no skin)", { mode = res_mode, game = game_w .. "x" .. game_h, screen = screen_w .. "x" .. screen_h, render_scale = rs })
     end
 
     -- Force a black frame so the window doesn’t appear frozen during init
