@@ -61,7 +61,7 @@ jobs:
         if: steps.lint-cache.outputs.cache-hit != 'true'
         run: |
           curl -sL https://github.com/JohnnyMorganz/StyLua/releases/latest/download/stylua-linux-x86_64.zip -o stylua.zip
-          unzip -q stylua.zip -d /usr/local/bin
+          unzip -oq stylua.zip -d /usr/local/bin
           chmod +x /usr/local/bin/stylua
 
       - name: Copy shared lint configs to project root
