@@ -28,6 +28,7 @@ local Settings = require("love2d4me.src.settings")
 local JSON = require("love2d4me.src.json")
 local DayNight = require("love2d4me.src.daynight")
 local Resolution = require("love2d4me.src.resolution")
+local Skin = require("love2d4me.src.skin")
 
 local GameState = {}
 
@@ -74,6 +75,8 @@ end
 -- Forward declarations for mutual references
 local build_options_menu
 local build_video_menu
+local build_controls_menu
+local waiting_for_key = nil
 
 local res_mode = "stretch"
 
@@ -103,6 +106,35 @@ build_video_menu = function()
     }
 end
 
+build_controls_menu = function()
+    local entries = {}
+    local actions = Input.get_bound_actions()
+    for _, action in ipairs(actions) do
+        local label = Input.get_action_label(action) .. ": " .. Input.get_binding_display(action)
+        table.insert(entries, { label = label, action = function()
+            waiting_for_key = action
+            Menu.pop()
+            Menu.push({
+                title = "Press a key for " .. Input.get_action_label(action) .. "...",
+                entries = {
+                    { label = "Cancel", action = function()
+                        waiting_for_key = nil
+                        Menu.pop()
+                        Menu.push(build_controls_menu())
+                    end },
+                },
+            })
+        end })
+    end
+    table.insert(entries, { label = "Reset to Defaults", action = function()
+        Input.reset_bindings()
+        Menu.pop()
+        Menu.push(build_controls_menu())
+    end })
+    table.insert(entries, { label = "Back", action = function() Menu.pop() end })
+    return { title = "Controls", entries = entries }
+end
+
 build_options_menu = function()
     local vol = math.floor(love.audio.getVolume() * 100 + 0.5)
     return {
@@ -120,8 +152,25 @@ build_options_menu = function()
             { label = "Video Settings", action = function()
                 Menu.push(build_video_menu())
             end },
+            { label = "Controls", action = function()
+                Menu.push(build_controls_menu())
+            end },
             { label = "Back", action = function() Menu.pop() end },
         },
+    }
+end
+
+local function build_credits_menu()
+    local entries = {}
+    for _, line in ipairs(config.credits or {}) do
+        table.insert(entries, { label = line })
+    end
+    table.insert(entries, { label = "" })
+    table.insert(entries, { label = "Back", action = function() Menu.pop() end })
+    return {
+        title = "Credits",
+        entries = entries,
+        on_cancel = function() Menu.pop() end,
     }
 end
 
@@ -147,6 +196,12 @@ local function build_main_menu()
         table.insert(entries, {
             label = "Options",
             action = function() Menu.push(build_options_menu()) end,
+        })
+    end
+    if config.credits then
+        table.insert(entries, {
+            label = "Credits",
+            action = function() Menu.push(build_credits_menu()) end,
         })
     end
     table.insert(entries, {
@@ -292,14 +347,61 @@ function GameState.init(opts)
     -- Resolution scaling (game logical size â†’ screen size)
     game_w = config.width or love.graphics.getWidth()
     game_h = config.height or love.graphics.getHeight()
-    Resolution.set(res_mode, game_w, game_h, love.graphics.getDimensions())
-    Log.info("Resolution initialized", { mode = res_mode, w = game_w, h = game_h })
 
-    -- Force a black frame so the window doesn't appear frozen during init
+    -- Skin: CLI arg > saved setting > platform default > config default > none
+    local function platform_default_skin()
+        local ps = config.platform_skins
+        if not ps then return nil end
+        local os_name = love.system.getOS()
+        if os_name == "Android" or os_name == "iOS" then
+            return ps.mobile
+        end
+        if os_name == "Web" then
+            local w, h = love.graphics.getDimensions()
+            if w <= 800 or h <= 600 then return ps.mobile end
+            return ps.desktop
+        end
+        return ps.desktop
+    end
+    local skin_name = Skin.parse_args()
+        or Settings.get("skin")
+        or platform_default_skin()
+        or config.default_skin
+    if skin_name and Skin.init(skin_name, game_w, game_h) then
+        local skin_w, skin_h = Skin.get_dimensions()
+        -- Expand the window to fit the skin's bezel — game resolution stays the same
+        love.window.setMode(skin_w, skin_h, { resizable = true })
+        Resolution.set(res_mode, skin_w, skin_h, skin_w, skin_h)
+        -- Skin owns button rendering and coordinate transform
+        Input.set_buttons(Skin.get_buttons())
+        Input.set_draw_enabled(false)
+        Input.set_coord_transform(function(sx, sy)
+            return Resolution.to_game(sx, sy)
+        end)
+        Log.info("Resolution initialized (skin)", { mode = res_mode, skin = skin_w .. "x" .. skin_h, game = game_w .. "x" .. game_h })
+    else
+        Resolution.set(res_mode, game_w, game_h, love.graphics.getDimensions())
+        Log.info("Resolution initialized", { mode = res_mode, w = game_w, h = game_h })
+    end
+
+    -- Force a black frame so the window doesn’t appear frozen during init
     love.graphics.clear(0, 0, 0, 1)
     love.graphics.present()
 
     Input.init()
+
+    -- Update skin button labels to show actual key bindings
+    if Skin.is_active() then
+        for _, btn in ipairs(Skin.get_buttons()) do
+            local key = Input.get_key_name(btn.action)
+            if key ~= "" then
+                btn.label = Input.get_key_label(key)
+            end
+        end
+    end
+
+    Skin.warm_picker_cache()
+
     Fonts.init()
     Splash.init({
         on_complete = function()
@@ -341,7 +443,6 @@ end
 
 function GameState.update(dt)
     Log.update(dt)
-    Input.update()
     -- Per-state music: play the track for the current state, stop all others
     local wanted = state_music[state]
     if wanted ~= current_music then
@@ -376,93 +477,107 @@ function GameState.update(dt)
             loading_dots = (loading_dots + 1) % 4
         end
     elseif state == "menu" or state == "pause" then -- luacheck: ignore 542
-        -- menu is idle, waits for keypressed
+        if not Skin.is_picker_open() then
+            -- menu is idle, waits for keypressed
+        end
     elseif state == "gameplay" then
-        if callbacks.on_gameplay_update then
-            callbacks.on_gameplay_update(dt)
+        if not Skin.is_picker_open() then
+            if callbacks.on_gameplay_update then
+                callbacks.on_gameplay_update(dt)
+            end
         end
     elseif custom_states[state] and custom_states[state].update then
-        custom_states[state].update(dt)
+        if not Skin.is_picker_open() then
+            custom_states[state].update(dt)
+        end
     end
+    if Skin.is_picker_open() then
+        Skin.picker_update(Input, game_w, game_h, Resolution)
+    elseif Input.pressed("skin_cycle") then
+        Skin.open_picker()
+    end
+    -- Clear single-frame presses AFTER all state updates have read them
+    Input.update()
 end
 
 function GameState.draw()
-    if state == "splash" then
-        Splash.draw()
-    elseif state == "loading" then
-        local sw, sh = love.graphics.getDimensions()
-        love.graphics.clear(0, 0, 0, 1)
-        -- Loading background from config
-        if config.loading_bg and not _loading_bg_img then
-            if love.filesystem.getInfo(config.loading_bg) then
-                _loading_bg_img = love.graphics.newImage(config.loading_bg)
-            end
-        end
-        if _loading_bg_img then
-            love.graphics.setColor(1, 1, 1, 1)
-            draw_fullscreen(_loading_bg_img)
-        end
-        -- Loading text with animated dots
-        love.graphics.setColor(1, 1, 1, 1)
-        local dots = string.rep(".", loading_dots)
-        local text = loading_text .. dots
-        local font = love.graphics.getFont()
-        local tw = font:getWidth(text)
-        love.graphics.print(text, (sw - tw) / 2, sh * 0.5)
-        -- Simple spinner bar
-        local bar_w = sw * 0.3
-        local bar_h = 4
-        local bar_x = (sw - bar_w) / 2
-        local bar_y = sh * 0.55
-        love.graphics.setColor(0.3, 0.3, 0.3, 1)
-        love.graphics.rectangle("fill", bar_x, bar_y, bar_w, bar_h)
-        -- Animated fill
-        local fill = (math.sin(love.timer.getTime() * 3) + 1) / 2
-        love.graphics.setColor(1, 1, 1, 0.8)
-        love.graphics.rectangle("fill", bar_x, bar_y, bar_w * fill, bar_h)
-    elseif state == "menu" or state == "pause" then
-        if state == "pause" and callbacks.on_gameplay_draw then
-            Resolution.render(callbacks.on_gameplay_draw)
-        end
-        Menu.draw()
-    elseif state == "gameplay" then
-        if callbacks.on_gameplay_draw then
-            Resolution.render(callbacks.on_gameplay_draw)
-        end
-    elseif state == "dead" and not custom_states["dead"] then
-        local sw, sh = love.graphics.getDimensions()
-        love.graphics.clear(0, 0, 0, 1)
-
-        -- Background image with optional slide animation
-        if config.death_bg then
-            if not _death_bg_img then
-                if love.filesystem.getInfo(config.death_bg) then
-                    _death_bg_img = love.graphics.newImage(config.death_bg)
+    -- All state rendering goes through the skin so menus, splash, loading
+    -- all appear inside the skin viewport (e.g. the Game Boy screen).
+    local function draw_content()
+        if state == "splash" then
+            Splash.draw()
+        elseif state == "loading" then
+            local sw, sh = love.graphics.getDimensions()
+            love.graphics.clear(0, 0, 0, 1)
+            if config.loading_bg and not _loading_bg_img then
+                if love.filesystem.getInfo(config.loading_bg) then
+                    _loading_bg_img = love.graphics.newImage(config.loading_bg)
                 end
             end
-            if _death_bg_img then
+            if _loading_bg_img then
                 love.graphics.setColor(1, 1, 1, 1)
-                if config.death_bg_animate == "slide_down" then
-                    _death_bg_y = math.min((_death_bg_y or -sh) + 15, 0)
-                    love.graphics.draw(_death_bg_img, 0, _death_bg_y)
-                else
-                    draw_fullscreen(_death_bg_img)
+                draw_fullscreen(_loading_bg_img)
+            end
+            love.graphics.setColor(1, 1, 1, 1)
+            local dots = string.rep(".", loading_dots)
+            local text = loading_text .. dots
+            local font = love.graphics.getFont()
+            local tw = font:getWidth(text)
+            love.graphics.print(text, (sw - tw) / 2, sh * 0.5)
+            local bar_w = sw * 0.3
+            local bar_h = 4
+            local bar_x = (sw - bar_w) / 2
+            local bar_y = sh * 0.55
+            love.graphics.setColor(0.3, 0.3, 0.3, 1)
+            love.graphics.rectangle("fill", bar_x, bar_y, bar_w, bar_h)
+            local fill = (math.sin(love.timer.getTime() * 3) + 1) / 2
+            love.graphics.setColor(1, 1, 1, 0.8)
+            love.graphics.rectangle("fill", bar_x, bar_y, bar_w * fill, bar_h)
+        elseif state == "menu" or state == "pause" then
+            if state == "pause" and callbacks.on_gameplay_draw then
+                callbacks.on_gameplay_draw()
+            end
+            Menu.draw()
+        elseif state == "gameplay" then
+            if callbacks.on_gameplay_draw then
+                callbacks.on_gameplay_draw()
+            end
+        elseif state == "dead" and not custom_states["dead"] then
+            local sw, sh = love.graphics.getDimensions()
+            love.graphics.clear(0, 0, 0, 1)
+            if config.death_bg then
+                if not _death_bg_img then
+                    if love.filesystem.getInfo(config.death_bg) then
+                        _death_bg_img = love.graphics.newImage(config.death_bg)
+                    end
+                end
+                if _death_bg_img then
+                    love.graphics.setColor(1, 1, 1, 1)
+                    if config.death_bg_animate == "slide_down" then
+                        _death_bg_y = math.min((_death_bg_y or -sh) + 15, 0)
+                        love.graphics.draw(_death_bg_img, 0, _death_bg_y)
+                    else
+                        draw_fullscreen(_death_bg_img)
+                    end
                 end
             end
+            love.graphics.setColor(0.5, 0.5, 0.5, 1)
+            love.graphics.setFont(_G["pixelfonthuge"] or Fonts.get(nil, config.death_font_size or 64))
+            love.graphics.printf(config.death_text or "Game Over", 0, sh * 0.3, sw, "center")
+            local can_respawn = not config.death_bg_animate or not _death_bg_y or _death_bg_y >= 0
+            if can_respawn then
+                love.graphics.setFont(_G["pixelfontlarge"] or Fonts.get(nil, 24))
+                love.graphics.printf(config.death_respawn_text or ("Press " .. Input.get_key_name("confirm") .. " to continue"), 0, sh * 0.6, sw, "center")
+            end
+            love.graphics.setColor(1, 1, 1, 1)
+        elseif custom_states[state] and custom_states[state].draw then
+            custom_states[state].draw()
         end
+    end
 
-        love.graphics.setColor(0.5, 0.5, 0.5, 1)
-        love.graphics.setFont(_G["pixelfonthuge"] or Fonts.get(nil, config.death_font_size or 64))
-        love.graphics.printf(config.death_text or "Game Over", 0, sh * 0.3, sw, "center")
-
-        local can_respawn = not config.death_bg_animate or not _death_bg_y or _death_bg_y >= 0
-        if can_respawn then
-            love.graphics.setFont(_G["pixelfontlarge"] or Fonts.get(nil, 24))
-            love.graphics.printf(config.death_respawn_text or ("Press " .. Input.get_key_name("confirm") .. " to continue"), 0, sh * 0.6, sw, "center")
-        end
-        love.graphics.setColor(1, 1, 1, 1)
-    elseif custom_states[state] and custom_states[state].draw then
-        custom_states[state].draw()
+    Skin.render(draw_content, Resolution)
+    if Skin.is_picker_open() then
+        Resolution.render(function() Skin.picker_draw() end)
     end
     Input.draw()
 
@@ -494,7 +609,20 @@ function GameState.respawn()
 end
 
 function GameState.keypressed(key)
+    -- Key capture for controls rebinding — intercept before menu navigation
+    if waiting_for_key then
+        if key ~= "escape" then
+            Input.rebind(waiting_for_key, { key })
+        end
+        waiting_for_key = nil
+        Menu.pop()
+        Menu.push(build_controls_menu())
+        return
+    end
     Input.keypressed(key)
+    if Skin.is_picker_open() then
+        return
+    end
     if state == "splash" then
         Splash.skip()
     elseif state == "menu" or state == "pause" then
@@ -525,35 +653,76 @@ function GameState.keyreleased(key)
     end
 end
 
--- Tap / click dispatch: splash skips, menus hit-test entries, gameplay
--- forwards to Input (for on-screen virtual buttons) and the game's
--- optional touch/mouse callbacks. love.touchpressed and love.mousepressed
--- are wired automatically at the end of GameState.init so games don't
--- need to add boilerplate in their main.lua.
-function GameState.touchpressed(id, x, y)
+-- Map Input actions to the raw keys that Menu.keypressed expects
+local ACTION_TO_MENU_KEY = {
+    move_up = "up", move_down = "down", move_left = "left", move_right = "right",
+    confirm = "return", cancel = "escape",
+}
+
+local function forward_action_to_menu(action)
+    if not action then return end
+    if not (state == "menu" or state == "pause" or state == "splash") then return end
+    if waiting_for_key then return end
     if state == "splash" then
         Splash.skip()
-    elseif state == "menu" or state == "pause" then
-        Menu.touchpressed(x, y)
-    elseif state == "gameplay" then
-        Input.touchpressed(id, x, y)
-        if callbacks.on_gameplay_touchpressed then
-            callbacks.on_gameplay_touchpressed(id, x, y)
-        end
-    elseif custom_states[state] and custom_states[state].touchpressed then
-        custom_states[state].touchpressed(id, x, y)
+        return
     end
+    local key = ACTION_TO_MENU_KEY[action]
+    if key then Menu.keypressed(key) end
 end
 
 function GameState.mousepressed(x, y, button)
-    if state == "splash" then
-        if button == 1 then Splash.skip() end
-    elseif state == "menu" or state == "pause" then
-        Menu.mousepressed(x, y, button)
-    elseif state == "gameplay" and callbacks.on_gameplay_mousepressed then
-        callbacks.on_gameplay_mousepressed(x, y, button)
-    elseif custom_states[state] and custom_states[state].mousepressed then
-        custom_states[state].mousepressed(x, y, button)
+    if Skin.is_picker_open() then
+        local gx, gy = Resolution.to_game(x, y)
+        Skin.picker_click(gx, gy, game_w, game_h, Resolution, Input)
+        return
+    end
+    local action = Input.mousepressed(x, y, button)
+    forward_action_to_menu(action)
+end
+
+function GameState.mousereleased(x, y, button)
+    Input.mousereleased(x, y, button)
+end
+
+function GameState.touchpressed(id, x, y)
+    if Skin.is_picker_open() then
+        local gx, gy = Resolution.to_game(x, y)
+        Skin.picker_click(gx, gy, game_w, game_h, Resolution, Input)
+        return
+    end
+    local action = Input.touchpressed(id, x, y)
+    forward_action_to_menu(action)
+end
+
+function GameState.touchreleased(id, x, y)
+    Input.touchreleased(id, x, y)
+end
+
+function GameState.touchmoved(id, x, y)
+    Input.touchmoved(id, x, y)
+end
+
+function GameState.resize(w, h)
+    local ori_skins = config.orientation_skins
+    if ori_skins then
+        local os_name = love.system.getOS()
+        local is_mobile = os_name == "Android" or os_name == "iOS"
+            or (os_name == "Web" and (w <= 800 or h <= 600))
+        if is_mobile then
+            local orientation = w > h and "landscape" or "portrait"
+            local target = ori_skins[orientation]
+            if target and target ~= Skin.get_name() then
+                Skin.switch(target, game_w, game_h, Resolution, Input)
+            end
+        end
+    end
+
+    if Skin.is_active() then
+        local skin_w, skin_h = Skin.get_dimensions()
+        Resolution.set(res_mode, skin_w, skin_h, w, h)
+    else
+        Resolution.set(res_mode, game_w, game_h, w, h)
     end
 end
 

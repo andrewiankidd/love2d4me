@@ -1,0 +1,17 @@
+{
+    "name": "CRT Monitor",
+    "width": 640,
+    "height": 480,
+    "background": "#0a0a0a",
+    "viewport": {
+        "x": 24,
+        "y": 24,
+        "width": 592,
+        "height": 432
+    },
+    "viewport_border": true,
+    "overlay": "scanlines.glsl",
+    "buttons": [
+        { "action": "skin_cycle", "x": 300, "y": 462, "w": 40, "h": 14, "label": "HOME", "color": "#333" }
+    ]
+}

@@ -15,7 +15,7 @@ const out = path.join(root, loveName);
 const devPath = path.join(root, '..', 'love2d4me');
 const devMode = fs.existsSync(path.join(devPath, 'init.lua'));
 
-const DEV_INCLUDE = ['init.lua', 'src', 'scripts', 'assets', '.luacheckrc'];
+const DEV_INCLUDE = ['init.lua', 'src', 'scripts', 'assets', 'skins', '.luacheckrc'];
 
 fs.rmSync(out, { force: true });
 const zip = new AdmZip();

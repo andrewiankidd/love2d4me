@@ -172,7 +172,7 @@ function Menu.draw()
     local prev_font = love.graphics.getFont()
     local title_font = current_menu.title_font or prev_font
     local entry_font = current_menu.entry_font or prev_font
-    local spacing = current_menu.spacing or 32
+    local spacing = current_menu.spacing or math.ceil(entry_font:getHeight() * 1.6)
 
     -- Measure total content height to center vertically
     local logo_h = 0
@@ -202,19 +202,45 @@ function Menu.draw()
     love.graphics.printf(current_menu.title or "", 0, top_y, sw, "center")
     top_y = top_y + title_h
 
-    -- Entries
+    -- Entries (scrollable when they exceed available height)
     love.graphics.setFont(entry_font)
     local start_y = current_menu.entries_y or top_y
+    local bottom_margin = 20
+    local available_h = sh - start_y - bottom_margin
+    local n = #current_menu.entries
+    local visible = math.max(1, math.floor(available_h / spacing))
 
-    for i, entry in ipairs(current_menu.entries) do
+    local scroll_offset = 0
+    if n > visible then
+        scroll_offset = math.min(current_menu.index - 1, n - visible)
+        scroll_offset = math.max(0, scroll_offset)
+    end
+
+    local first = scroll_offset + 1
+    local last = math.min(n, scroll_offset + visible)
+
+    -- Scroll indicator above
+    if scroll_offset > 0 then
+        love.graphics.setColor(1, 1, 1, 0.4)
+        love.graphics.printf("...", 0, start_y - spacing * 0.6, sw, "center")
+    end
+
+    for i = first, last do
+        local entry = current_menu.entries[i]
         if i == current_menu.index then
             love.graphics.setColor(1, 1, 0, 1)
         else
             love.graphics.setColor(1, 1, 1, 1)
         end
-        local entry_y = start_y + (i - 1) * spacing
+        local entry_y = start_y + (i - first) * spacing
         love.graphics.printf(entry.label, 0, entry_y, sw, "center")
         entry._rect = { x = 0, y = entry_y, w = sw, h = spacing }
+    end
+
+    -- Scroll indicator below
+    if last < n then
+        love.graphics.setColor(1, 1, 1, 0.4)
+        love.graphics.printf("...", 0, start_y + (last - first + 1) * spacing * 0.7, sw, "center")
     end
 
     love.graphics.setFont(prev_font)

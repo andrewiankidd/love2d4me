@@ -17,6 +17,7 @@ return {
     conf          = require(BASE .. "conf"),
     fonts         = require(BASE .. "fonts"),
     resolution    = require(BASE .. "resolution"),
+    skin          = require(BASE .. "skin"),
     settings      = require(BASE .. "settings"),
     storage       = require(BASE .. "storage"),
     log           = require(BASE .. "log"),

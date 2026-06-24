@@ -43,6 +43,10 @@ local config = { width = 800, height = 600 }
 local is_touch = false
 local buttons = {}         -- array of { action, x, y, w, h, label, held }
 local mode = "auto"        -- "auto", "keyboard", "touch"
+local coord_transform = nil -- function(x,y)->x,y for screen-to-game conversion
+local external_buttons = false -- true when skin owns the button layout
+local mouse_active = nil   -- action held by mouse click
+local draw_enabled = true  -- false when skin handles button rendering
 
 -- Detection
 
@@ -84,6 +88,38 @@ local DEFAULT_BINDINGS = {
     interact   = { keys = {"e", "return"} },
     pause      = { keys = {"escape", "p"} },
     tab        = { keys = {"tab"} },
+    skin_cycle = { keys = {"home"} },
+}
+
+-- Canonical display order — only bound actions appear in menus.
+local ACTION_ORDER = {
+    "move_up", "move_down", "move_left", "move_right",
+    "confirm", "cancel", "sprint", "shoot", "interact", "pause", "tab", "skin_cycle",
+}
+
+-- Human-readable labels for actions.
+local ACTION_LABELS = {
+    move_up    = "Move Up",
+    move_down  = "Move Down",
+    move_left  = "Move Left",
+    move_right = "Move Right",
+    confirm    = "Confirm",
+    cancel     = "Cancel",
+    sprint     = "Sprint",
+    shoot      = "Shoot",
+    interact   = "Interact",
+    pause      = "Pause",
+    tab        = "Tab",
+    skin_cycle = "Switch Skin",
+}
+
+-- Human-readable labels for LOVE key names.
+local KEY_LABELS = {
+    ["return"] = "Enter", space = "Space", escape = "Esc",
+    lshift = "L.Shift", rshift = "R.Shift", lctrl = "L.Ctrl", rctrl = "R.Ctrl",
+    lalt = "L.Alt", ralt = "R.Alt",
+    up = "Up", down = "Down", left = "Left", right = "Right",
+    tab = "Tab", backspace = "Backspace", home = "Home",
 }
 
 function Input.init(opts)
@@ -112,6 +148,24 @@ end
 
 function Input.is_touch_active()
     return is_touch
+end
+
+function Input.set_coord_transform(fn)
+    coord_transform = fn
+end
+
+function Input.set_buttons(btns)
+    buttons = btns
+    external_buttons = true
+end
+
+function Input.set_draw_enabled(enabled)
+    draw_enabled = enabled
+end
+
+function Input.set_action(action, is_held, is_pressed)
+    held_actions[action] = is_held
+    if is_pressed then pressed_actions[action] = true end
 end
 
 function Input.bind(action, opts)
@@ -220,15 +274,23 @@ local function find_button(x, y)
     return nil
 end
 
+local function transform(x, y)
+    if coord_transform then return coord_transform(x, y) end
+    return x, y
+end
+
 function Input.touchpressed(id, x, y)
     is_touch = true
-    local btn = find_button(x, y)
+    local tx, ty = transform(x, y)
+    local btn = find_button(tx, ty)
     if btn then
         touch_active[id] = btn.action
         held_actions[btn.action] = true
         pressed_actions[btn.action] = true
         btn.held = true
+        return btn.action
     end
+    return nil
 end
 
 function Input.touchreleased(id, x, y)
@@ -243,25 +305,109 @@ function Input.touchreleased(id, x, y)
 end
 
 function Input.touchmoved(id, x, y)
+    local tx, ty = transform(x, y)
     local prev_action = touch_active[id]
-    local btn = find_button(x, y)
+    local btn = find_button(tx, ty)
     local new_action = btn and btn.action or nil
 
     if prev_action ~= new_action then
-        -- Release old
         if prev_action then
             held_actions[prev_action] = false
             for _, button in ipairs(buttons) do
                 if button.action == prev_action then button.held = false end
             end
         end
-        -- Press new
         if new_action then
             held_actions[new_action] = true
             btn.held = true
             touch_active[id] = new_action
         else
             touch_active[id] = nil
+        end
+    end
+end
+
+function Input.mousepressed(x, y, button)
+    if button ~= 1 then return nil end
+    local tx, ty = transform(x, y)
+    local btn = find_button(tx, ty)
+    if btn then
+        mouse_active = btn.action
+        held_actions[btn.action] = true
+        pressed_actions[btn.action] = true
+        btn.held = true
+        return btn.action
+    end
+    return nil
+end
+
+function Input.mousereleased(x, y, button)
+    if button ~= 1 or not mouse_active then return end
+    held_actions[mouse_active] = false
+    for _, btn in ipairs(buttons) do
+        if btn.action == mouse_active then btn.held = false end
+    end
+    mouse_active = nil
+end
+
+-- Controls menu helpers
+
+-- Human-readable label for a LOVE key name.
+function Input.get_key_label(key)
+    if KEY_LABELS[key] then return KEY_LABELS[key] end
+    if #key == 1 then return key:upper() end
+    return key
+end
+
+-- Human-readable label for an action.
+function Input.get_action_label(action)
+    return ACTION_LABELS[action] or action
+end
+
+-- Formatted display string for an action's bound keys (e.g. "W, Up").
+function Input.get_binding_display(action)
+    local keys = Input.get_keys(action)
+    if #keys == 0 then return "—" end
+    local parts = {}
+    for _, k in ipairs(keys) do
+        table.insert(parts, Input.get_key_label(k))
+    end
+    return table.concat(parts, ", ")
+end
+
+-- Ordered list of currently-bound action names (for building menus).
+function Input.get_bound_actions()
+    local result = {}
+    for _, action in ipairs(ACTION_ORDER) do
+        if bindings[action] then
+            table.insert(result, action)
+        end
+    end
+    -- Include any custom actions not in the canonical order
+    for action, _ in pairs(bindings) do
+        local found = false
+        for _, ordered in ipairs(ACTION_ORDER) do
+            if ordered == action then found = true; break end
+        end
+        if not found then table.insert(result, action) end
+    end
+    return result
+end
+
+-- Reset all bindings to defaults and clear saved overrides.
+function Input.reset_bindings()
+    for action, default_bind in pairs(DEFAULT_BINDINGS) do
+        bindings[action] = { keys = {} }
+        for _, k in ipairs(default_bind.keys) do
+            table.insert(bindings[action].keys, k)
+        end
+        held_actions[action] = false
+        pressed_actions[action] = false
+    end
+    local ok, Settings = pcall(require, "love2d4me.src.settings")
+    if ok and Settings and Settings.set then
+        for action, _ in pairs(DEFAULT_BINDINGS) do
+            Settings.set("input_" .. action, nil)
         end
     end
 end
@@ -294,8 +440,9 @@ end
 -- Drawing
 
 function Input.draw()
+    if not draw_enabled then return end
     if not is_touch then return end
-    if #buttons == 0 then Input.auto_layout() end
+    if #buttons == 0 and not external_buttons then Input.auto_layout() end
 
     local r, g, b, a = love.graphics.getColor()
     for _, btn in ipairs(buttons) do

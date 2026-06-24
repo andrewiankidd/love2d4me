@@ -1,0 +1,24 @@
+{
+    "name": "Handheld (Color)",
+    "width": 320,
+    "height": 560,
+    "background": "#3b2d6b",
+    "viewport": {
+        "x": 30,
+        "y": 30,
+        "width": 260,
+        "height": 234
+    },
+    "viewport_border": true,
+    "buttons": [
+        { "action": "move_up",    "x": 67,  "y": 315, "w": 46, "h": 46, "label": "^",      "color": "#1a1a2e" },
+        { "action": "move_left",  "x": 25,  "y": 357, "w": 46, "h": 46, "label": "<",      "color": "#1a1a2e" },
+        { "action": "move_right", "x": 109, "y": 357, "w": 46, "h": 46, "label": ">",      "color": "#1a1a2e" },
+        { "action": "move_down",  "x": 67,  "y": 399, "w": 46, "h": 46, "label": "v",      "color": "#1a1a2e" },
+        { "action": "confirm",    "x": 245, "y": 340, "w": 50, "h": 50, "label": "A",      "color": "#c62e65", "shape": "circle" },
+        { "action": "cancel",     "x": 195, "y": 390, "w": 50, "h": 50, "label": "B",      "color": "#c62e65", "shape": "circle" },
+        { "action": "pause",      "x": 110, "y": 480, "w": 45, "h": 16, "label": "START",  "color": "#444" },
+        { "action": "tab",        "x": 165, "y": 480, "w": 45, "h": 16, "label": "SELECT", "color": "#444" },
+        { "action": "skin_cycle", "x": 140, "y": 520, "w": 40, "h": 20, "label": "HOME",   "color": "#555" }
+    ]
+}

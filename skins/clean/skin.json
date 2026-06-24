@@ -1,0 +1,15 @@
+{
+    "name": "Clean",
+    "width": 640,
+    "height": 480,
+    "background": "#1a1a2e",
+    "viewport": {
+        "x": 0,
+        "y": 0,
+        "width": 640,
+        "height": 460
+    },
+    "buttons": [
+        { "action": "skin_cycle", "x": 300, "y": 462, "w": 40, "h": 14, "label": "HOME", "color": "#333" }
+    ]
+}

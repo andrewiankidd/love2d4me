@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Sprite Renderer</title>
+    <style>
+        body { font-family: system-ui, sans-serif; background: #1a1a2e; color: #eee; margin: 2em; }
+        #status { font-size: 1.2em; margin-bottom: 1em; }
+        #preview { border: 1px solid #444; background: repeating-conic-gradient(#333 0% 25%, #2a2a2a 0% 50%) 50% / 16px 16px; image-rendering: pixelated; }
+        .pose-label { display: inline-block; min-width: 100px; text-align: center; padding: 4px; font-size: 0.8em; color: #aaa; }
+        .done { color: #4caf50; }
+        .error { color: #f44; }
+    </style>
+</head>
+<body>
+    <h2>love2d4me Sprite Renderer</h2>
+    <div id="status">Loading config...</div>
+    <div id="pose-list"></div>
+    <canvas id="preview" style="display:none"></canvas>
+
+    <script type="importmap">
+    {
+        "imports": {
+            "three": "https://unpkg.com/three@0.170.0/build/three.module.js",
+            "three/addons/": "https://unpkg.com/three@0.170.0/examples/jsm/"
+        }
+    }
+    </script>
+    <script type="module">
+        import * as THREE from 'three';
+        import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+
+        const status = document.getElementById('status');
+        const poseList = document.getElementById('pose-list');
+        const preview = document.getElementById('preview');
+
+        function log(msg, cls) {
+            status.textContent = msg;
+            if (cls) status.className = cls;
+        }
+
+        try {
+            // Fetch config from the Node server
+            log('Fetching config...');
+            const config = await fetch('/config').then(r => r.json());
+            const size = config.frame_size || 128;
+            const poses = config.poses || [];
+
+            // Show pose list
+            poseList.innerHTML = poses.map(p =>
+                `<span class="pose-label" id="pose-${p.name}">${p.name}</span>`
+            ).join('');
+
+            // Setup offscreen renderer
+            const renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true, preserveDrawingBuffer: true });
+            renderer.setSize(size, size);
+            renderer.setClearColor(0x000000, 0);
+            renderer.outputColorSpace = THREE.SRGBColorSpace;
+
+            // Scene + lighting
+            const scene = new THREE.Scene();
+            const cam = config.camera || {};
+            const fov = cam.fov || 30;
+            const camera = new THREE.PerspectiveCamera(fov, 1, 0.01, 100);
+
+            const ambientIntensity = config.lighting?.ambient ?? 0.7;
+            const dirIntensity = config.lighting?.directional ?? 0.9;
+            scene.add(new THREE.AmbientLight(0xffffff, ambientIntensity));
+            const dirLight = new THREE.DirectionalLight(0xffffff, dirIntensity);
+            const dirDir = config.lighting?.direction || [1, 1, 1];
+            dirLight.position.set(dirDir[0], dirDir[1], dirDir[2]);
+            scene.add(dirLight);
+
+            // Load model
+            log('Loading model...');
+            const loader = new GLTFLoader();
+            const modelUrl = '/assets/' + config.model;
+            const gltf = await loader.loadAsync(modelUrl);
+            scene.add(gltf.scene);
+
+            // Auto-frame camera around model
+            const box = new THREE.Box3().setFromObject(gltf.scene);
+            const center = box.getCenter(new THREE.Vector3());
+            const modelSize = box.getSize(new THREE.Vector3());
+            const maxDim = Math.max(modelSize.x, modelSize.y, modelSize.z);
+            const dist = cam.distance || (maxDim / (2 * Math.tan(THREE.MathUtils.degToRad(fov / 2))) * 1.2);
+            const height = cam.height ?? center.y;
+            const angle = THREE.MathUtils.degToRad(cam.angle || 0);
+
+            camera.position.set(
+                center.x + Math.sin(angle) * dist,
+                height,
+                center.z + Math.cos(angle) * dist
+            );
+            camera.lookAt(center);
+
+            // Build animation clips map
+            const clips = {};
+            if (gltf.animations) {
+                for (const clip of gltf.animations) {
+                    clips[clip.name] = clip;
+                }
+            }
+            const mixer = new THREE.AnimationMixer(gltf.scene);
+
+            // Render each pose to an offscreen canvas
+            log('Rendering poses...');
+            const frameCanvases = [];
+
+            for (const pose of poses) {
+                const el = document.getElementById('pose-' + pose.name);
+
+                // Reset
+                mixer.stopAllAction();
+                mixer.setTime(0);
+                gltf.scene.rotation.set(0, 0, 0);
+
+                // Apply rotation if specified
+                if (pose.rotation) {
+                    gltf.scene.rotation.set(
+                        THREE.MathUtils.degToRad(pose.rotation[0] || 0),
+                        THREE.MathUtils.degToRad(pose.rotation[1] || 0),
+                        THREE.MathUtils.degToRad(pose.rotation[2] || 0)
+                    );
+                }
+
+                // Apply animation if specified
+                if (pose.animation && clips[pose.animation]) {
+                    const action = mixer.clipAction(clips[pose.animation]);
+                    action.play();
+                    action.paused = true;
+                    mixer.setTime(pose.time || 0);
+                    mixer.update(0);
+                } else if (pose.animation) {
+                    console.warn(`Animation "${pose.animation}" not found for pose "${pose.name}". Available: ${Object.keys(clips).join(', ')}`);
+                }
+
+                // Per-pose camera override
+                if (pose.camera) {
+                    const pd = pose.camera.distance || dist;
+                    const ph = pose.camera.height ?? height;
+                    const pa = THREE.MathUtils.degToRad(pose.camera.angle || cam.angle || 0);
+                    camera.position.set(
+                        center.x + Math.sin(pa) * pd,
+                        ph,
+                        center.z + Math.cos(pa) * pd
+                    );
+                    camera.lookAt(center);
+                }
+
+                renderer.render(scene, camera);
+
+                // Copy to a fresh canvas
+                const frameCanvas = document.createElement('canvas');
+                frameCanvas.width = size;
+                frameCanvas.height = size;
+                const ctx = frameCanvas.getContext('2d');
+                ctx.drawImage(renderer.domElement, 0, 0);
+                frameCanvases.push(frameCanvas);
+
+                if (el) el.className = 'pose-label done';
+
+                // Reset camera for next pose
+                camera.position.set(
+                    center.x + Math.sin(angle) * dist,
+                    height,
+                    center.z + Math.cos(angle) * dist
+                );
+                camera.lookAt(center);
+            }
+
+            // Stitch into horizontal strip
+            log('Stitching sprite sheet...');
+            const cols = config.columns || poses.length;
+            const rows = Math.ceil(poses.length / cols);
+            preview.width = size * cols;
+            preview.height = size * rows;
+            preview.style.display = 'block';
+            const sheetCtx = preview.getContext('2d');
+
+            const frameMap = {};
+            for (let i = 0; i < frameCanvases.length; i++) {
+                const col = i % cols;
+                const row = Math.floor(i / cols);
+                sheetCtx.drawImage(frameCanvases[i], col * size, row * size);
+                frameMap[poses[i].name] = { x: col * size, y: row * size, w: size, h: size };
+            }
+
+            // Send result back to the Node server
+            log('Saving...');
+            const dataUrl = preview.toDataURL('image/png');
+            const mapData = {
+                frame_size: size,
+                columns: cols,
+                rows: rows,
+                frames: frameMap
+            };
+
+            const resp = await fetch('/save', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ sheet: dataUrl, map: mapData })
+            });
+
+            if (resp.ok) {
+                log('Done! Sprite sheet saved. You can close this tab.', 'done');
+            } else {
+                log('Server error: ' + await resp.text(), 'error');
+            }
+
+            // Clean up
+            renderer.dispose();
+
+        } catch (err) {
+            log('Error: ' + err.message, 'error');
+            console.error(err);
+        }
+    </script>
+</body>
+</html>
