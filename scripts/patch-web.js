@@ -18,11 +18,31 @@ if (!fs.existsSync(indexPath)) {
 
 // Read game config
 let gameW = 800, gameH = 600, title = 'Game';
+let cfg = {};
 if (fs.existsSync(configPath)) {
-    const cfg = JSON.parse(fs.readFileSync(configPath, 'utf8'));
+    cfg = JSON.parse(fs.readFileSync(configPath, 'utf8'));
     gameW = cfg.width || 800;
     gameH = cfg.height || 600;
     title = cfg.title || 'Game';
+}
+
+// If a skin is configured, the canvas must be large enough for the skin's
+// window dimensions (the skin calls love.window.setMode at its own size).
+const skinName = (cfg.platform_skins && cfg.platform_skins.desktop) || cfg.default_skin;
+if (skinName && skinName !== 'none') {
+    const skinSearchPaths = [
+        path.join(root, 'skins', skinName, 'skin.json'),
+        path.join(root, 'src', 'love2d4me', 'skins', skinName, 'skin.json'),
+    ];
+    for (const sp of skinSearchPaths) {
+        if (fs.existsSync(sp)) {
+            const skin = JSON.parse(fs.readFileSync(sp, 'utf8'));
+            if (skin.width)  gameW = Math.max(gameW, skin.width);
+            if (skin.height) gameH = Math.max(gameH, skin.height);
+            console.log('Skin "' + skinName + '" detected — canvas expanded to ' + gameW + 'x' + gameH);
+            break;
+        }
+    }
 }
 
 // Extract INITIAL_MEMORY from love.js generated HTML (varies per build)
