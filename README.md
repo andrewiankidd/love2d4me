@@ -182,7 +182,7 @@ Place a `portable.txt` file beside the game binary. All data writes go to `./<id
 
 | Game | Type | Play |
 |------|------|------|
-| [Pocket Artemis](https://github.com/andrewiankidd/pocket-artemis) | Tamagotchi | [Web](https://andrewiankidd.github.io/pocket-artemis/Web/) |
+| [Pocket Artemis](https://github.com/andrewiankidd/pocket-artemis) | Tamagotchi | [Web](https://tiltedcartridge.co.uk/pocket-artemis/Web/) |
 | [Fear of the Dark](https://github.com/andrewiankidd/legacy-lua-fotd) | Top-down RPG | [Web](https://andrewiankidd.github.io/legacy-lua-fotd/Web/) |
 | [Platformer](https://github.com/andrewiankidd/legacy-lua-platformer) | 2D side-scroller | [Web](https://andrewiankidd.github.io/legacy-lua-platformer/Web/) |
 | [Mode 7](https://github.com/andrewiankidd/legacy-lua-mode7) | Retro perspective | [Web](https://andrewiankidd.github.io/legacy-lua-mode7/Web/) |
