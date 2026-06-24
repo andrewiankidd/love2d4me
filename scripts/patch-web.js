@@ -5,7 +5,7 @@
 const fs = require('fs');
 const path = require('path');
 
-const root = path.join(__dirname, '..', '..', '..');
+const root = process.argv[2] || path.join(__dirname, '..', '..', '..');
 const webDir = path.join(root, 'Web');
 const indexPath = path.join(webDir, 'index.html');
 const configPath = path.join(root, 'src', 'game', 'config.json');
