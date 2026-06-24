@@ -162,20 +162,13 @@ jobs:
             cd love-runtime && unzip -q love-download && rm love-download
           fi
 
-      - name: Cache 7z SFX stub
+      - name: Checkout SFX stub
         if: matrix.platform == 'windows'
-        id: sfx-cache
-        uses: actions/cache@v4
+        uses: actions/checkout@v4
         with:
-          path: 7z-sfx
-          key: 7z-sfx-v1
-
-      - name: Download 7z SFX stub
-        if: matrix.platform == 'windows' && steps.sfx-cache.outputs.cache-hit != 'true'
-        run: |
-          mkdir -p 7z-sfx
-          curl -sL "https://www.7-zip.org/a/7z2409-extra.7z" -o 7z-extra.7z
-          7z x 7z-extra.7z -o7z-sfx 7zS2.sfx
+          repository: andrewiankidd/love2d4me
+          sparse-checkout: .github/bin
+          path: love2d4me-bin
 
       - name: Fuse (Windows)
         if: matrix.platform == 'windows'
@@ -192,7 +185,7 @@ jobs:
 
           # Pack into single self-extracting exe
           7z a -mx=9 -mmt=on game.7z ./out/*
-          cat 7z-sfx/7zS2.sfx sfx_config.txt game.7z > "${{ inputs.love_filename }}-windows.exe"
+          cat love2d4me-bin/.github/bin/7zS2.sfx sfx_config.txt game.7z > "${{ inputs.love_filename }}-windows.exe"
 
       - name: Fuse (macOS)
         if: matrix.platform == 'macos'
