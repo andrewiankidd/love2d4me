@@ -150,7 +150,6 @@ jobs:
           APP_DIR="${APP_NAME}.app"
           cp -r love.app "${APP_DIR}"
           cp "${{ inputs.love_filename }}.love" "${APP_DIR}/Contents/Resources/"
-          # Update Info.plist with game identity
           sed -i "s|org.love2d.love|co.uk.tiltedcartridge.${{ inputs.love_filename }}|g" "${APP_DIR}/Contents/Info.plist"
           sed -i "s|LÖVE|${APP_NAME}|g" "${APP_DIR}/Contents/Info.plist"
           zip -r "${{ inputs.love_filename }}-macos.zip" "${APP_DIR}"
@@ -174,10 +173,65 @@ jobs:
           name: ${{ matrix.artifact }}-release
           path: ${{ inputs.love_filename }}-${{ matrix.artifact }}.*
 
+  build_android:
+    name: 'Android 🤖'
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      - name: Download .love file
+        uses: actions/download-artifact@v4
+        with:
+          name: love-file
+          path: .
+
+      - name: Clone love-android
+        run: |
+          git clone --depth 1 --branch "${{ env.LOVE_VERSION }}" \
+            https://github.com/love2d/love-android.git love-android
+
+      - name: Embed .love file
+        run: |
+          mkdir -p love-android/app/src/embed/assets
+          cp "${{ inputs.love_filename }}.love" love-android/app/src/embed/assets/game.love
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Install Android SDK components
+        run: |
+          sdkmanager --install "ndk;26.1.10909125" "cmake;3.22.1"
+
+      - name: Build APK
+        working-directory: love-android
+        run: |
+          chmod +x gradlew
+          ./gradlew assembleEmbedNoRecordRelease
+
+      - name: Collect APK
+        run: |
+          find love-android/app/build/outputs/apk -name "*.apk" -exec cp {} "${{ inputs.love_filename }}-android.apk" \;
+          zip "${{ inputs.love_filename }}-android.zip" "${{ inputs.love_filename }}-android.apk"
+
+      - name: Upload Android artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: android-release
+          path: ${{ inputs.love_filename }}-android.*
+
+  # TODO: iOS build requires macos-latest runner + Xcode + Apple Developer
+  # signing identity (provisioning profile + certificate). Not feasible
+  # without a paid Apple Developer account wired into CI secrets.
+
   release_rolling:
     name: 🔄 Refresh latest-main release
     runs-on: ubuntu-latest
-    needs: [build, build_platforms]
+    needs: [build, build_platforms, build_android]
     if: github.ref == format('refs/heads/{0}', inputs.branch)
     steps:
       - name: Checkout
@@ -199,6 +253,7 @@ jobs:
           cp ${{ inputs.love_filename }}-windows.zip ../release/ 2>/dev/null || true
           cp ${{ inputs.love_filename }}-macos.zip ../release/ 2>/dev/null || true
           cp ${{ inputs.love_filename }}-linux.zip ../release/ 2>/dev/null || true
+          cp ${{ inputs.love_filename }}-android.zip ../release/ 2>/dev/null || true
           cd ..
           echo "Release files:"
           ls -lh release/
@@ -225,6 +280,7 @@ jobs:
             | 🪟 Windows | `${{ inputs.love_filename }}-windows.zip` |
             | 🍎 macOS | `${{ inputs.love_filename }}-macos.zip` |
             | 🐧 Linux | `${{ inputs.love_filename }}-linux.zip` |
+            | 🤖 Android | `${{ inputs.love_filename }}-android.zip` |
             | 🌐 Web | [Play in browser](https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/Web/) |
             | 💜 .love | `${{ inputs.love_filename }}-love.zip` |
           files: release/*
@@ -232,7 +288,7 @@ jobs:
   release_tag:
     name: 🏷️ Create tagged release
     runs-on: ubuntu-latest
-    needs: [build, build_platforms]
+    needs: [build, build_platforms, build_android]
     if: startsWith(github.ref, 'refs/tags/v')
     steps:
       - name: Checkout
@@ -252,6 +308,7 @@ jobs:
           cp ${{ inputs.love_filename }}-windows.zip ../release/ 2>/dev/null || true
           cp ${{ inputs.love_filename }}-macos.zip ../release/ 2>/dev/null || true
           cp ${{ inputs.love_filename }}-linux.zip ../release/ 2>/dev/null || true
+          cp ${{ inputs.love_filename }}-android.zip ../release/ 2>/dev/null || true
           cd ..
           ls -lh release/
 
