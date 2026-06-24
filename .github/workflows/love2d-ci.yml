@@ -331,6 +331,11 @@ jobs:
         run: |
           sed -i 's/minifyEnabled true/minifyEnabled false/' love-android/app/build.gradle
 
+      - name: Fix embed game loading
+        run: |
+          sed -i '/embed = getResources().getBoolean(R.bool.embed);/a\        needToCopyGameInArchive = embed;' \
+            love-android/love/src/main/java/org/love2d/android/GameActivity.java
+
       - name: Set up JDK 17
         uses: actions/setup-java@v4
         with:
