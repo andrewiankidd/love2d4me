@@ -16,10 +16,18 @@ on:
         type: string
         default: "master"
         description: "Main branch name"
+      love_version:
+        required: false
+        type: string
+        default: "11.5"
+        description: "LOVE2D version for platform builds"
+
+env:
+  LOVE_VERSION: ${{ inputs.love_version }}
 
 jobs:
   lint:
-    name: Lint
+    name: Lint 🔍
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -54,7 +62,7 @@ jobs:
         run: stylua --check src/ --glob "**/*.lua" || echo "StyLua warnings (non-blocking)"
 
   build:
-    name: Build
+    name: Build 🛠️
     runs-on: ubuntu-latest
     needs: lint
     steps:
@@ -77,25 +85,99 @@ jobs:
       - name: Build web (love.js)
         run: npm run build
 
-      - name: Compress .love for release
-        run: zip ${{ inputs.love_filename }}-love.zip ${{ inputs.love_filename }}.love
-
       - name: Upload Web artifact
         uses: actions/upload-artifact@v4
         with:
           name: Web-build
           path: Web/
 
-      - name: Upload .love artifact
+      - name: Upload .love file
         uses: actions/upload-artifact@v4
         with:
-          name: ${{ inputs.love_filename }}-love
-          path: ${{ inputs.love_filename }}-love.zip
+          name: love-file
+          path: ${{ inputs.love_filename }}.love
 
-  release_rolling:
-    name: Refresh latest-main release
+  build_platforms:
+    name: ${{ matrix.name }}
     runs-on: ubuntu-latest
     needs: build
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - platform: windows
+            name: 'Windows 🪟'
+            artifact: windows
+          - platform: macos
+            name: 'macOS 🍎'
+            artifact: macos
+          - platform: linux
+            name: 'Linux 🐧'
+            artifact: linux
+    steps:
+      - name: Download .love file
+        uses: actions/download-artifact@v4
+        with:
+          name: love-file
+          path: .
+
+      - name: Download LOVE runtime (Windows)
+        if: matrix.platform == 'windows'
+        run: |
+          curl -sL "https://github.com/love2d/love/releases/download/${LOVE_VERSION}/love-${LOVE_VERSION}-win64.zip" -o love-runtime.zip
+          unzip -q love-runtime.zip
+
+      - name: Fuse (Windows)
+        if: matrix.platform == 'windows'
+        run: |
+          LOVE_DIR="love-${LOVE_VERSION}-win64"
+          mkdir -p out
+          cat "${LOVE_DIR}/love.exe" "${{ inputs.love_filename }}.love" > "out/${{ inputs.love_filename }}.exe"
+          cp "${LOVE_DIR}"/*.dll out/
+          cp "${LOVE_DIR}/license.txt" out/ 2>/dev/null || true
+          cd out && zip -r "../${{ inputs.love_filename }}-windows.zip" .
+
+      - name: Download LOVE runtime (macOS)
+        if: matrix.platform == 'macos'
+        run: |
+          curl -sL "https://github.com/love2d/love/releases/download/${LOVE_VERSION}/love-${LOVE_VERSION}-macos.zip" -o love-runtime.zip
+          unzip -q love-runtime.zip
+
+      - name: Fuse (macOS)
+        if: matrix.platform == 'macos'
+        run: |
+          APP_NAME="${{ inputs.project_name }}"
+          APP_DIR="${APP_NAME}.app"
+          cp -r love.app "${APP_DIR}"
+          cp "${{ inputs.love_filename }}.love" "${APP_DIR}/Contents/Resources/"
+          # Update Info.plist with game identity
+          sed -i "s|org.love2d.love|co.uk.tiltedcartridge.${{ inputs.love_filename }}|g" "${APP_DIR}/Contents/Info.plist"
+          sed -i "s|LÖVE|${APP_NAME}|g" "${APP_DIR}/Contents/Info.plist"
+          zip -r "${{ inputs.love_filename }}-macos.zip" "${APP_DIR}"
+
+      - name: Download LOVE runtime (Linux)
+        if: matrix.platform == 'linux'
+        run: |
+          curl -sL "https://github.com/love2d/love/releases/download/${LOVE_VERSION}/love-${LOVE_VERSION}-x86_64.AppImage" -o love.AppImage
+          chmod +x love.AppImage
+
+      - name: Fuse (Linux)
+        if: matrix.platform == 'linux'
+        run: |
+          cat love.AppImage "${{ inputs.love_filename }}.love" > "${{ inputs.love_filename }}-linux.AppImage"
+          chmod +x "${{ inputs.love_filename }}-linux.AppImage"
+          zip "${{ inputs.love_filename }}-linux.zip" "${{ inputs.love_filename }}-linux.AppImage"
+
+      - name: Upload platform artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.artifact }}-release
+          path: ${{ inputs.love_filename }}-${{ matrix.artifact }}.*
+
+  release_rolling:
+    name: 🔄 Refresh latest-main release
+    runs-on: ubuntu-latest
+    needs: [build, build_platforms]
     if: github.ref == format('refs/heads/{0}', inputs.branch)
     steps:
       - name: Checkout
@@ -106,6 +188,20 @@ jobs:
         with:
           path: dist
           merge-multiple: true
+
+      - name: Prepare release files
+        run: |
+          mkdir -p release
+          # .love file
+          cd dist
+          zip "../release/${{ inputs.love_filename }}-love.zip" "${{ inputs.love_filename }}.love" 2>/dev/null || true
+          # Platform builds (already zipped)
+          cp ${{ inputs.love_filename }}-windows.zip ../release/ 2>/dev/null || true
+          cp ${{ inputs.love_filename }}-macos.zip ../release/ 2>/dev/null || true
+          cp ${{ inputs.love_filename }}-linux.zip ../release/ 2>/dev/null || true
+          cd ..
+          echo "Release files:"
+          ls -lh release/
 
       - name: Delete previous latest-main release + tag
         env:
@@ -123,12 +219,20 @@ jobs:
           target_commitish: ${{ github.sha }}
           body: |
             Auto-built from `${{ inputs.branch }}` at commit `${{ github.sha }}`.
-          files: dist/${{ inputs.love_filename }}-love.zip
+
+            | Platform | |
+            |---|---|
+            | 🪟 Windows | `${{ inputs.love_filename }}-windows.zip` |
+            | 🍎 macOS | `${{ inputs.love_filename }}-macos.zip` |
+            | 🐧 Linux | `${{ inputs.love_filename }}-linux.zip` |
+            | 🌐 Web | [Play in browser](https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/Web/) |
+            | 💜 .love | `${{ inputs.love_filename }}-love.zip` |
+          files: release/*
 
   release_tag:
-    name: Create tagged release
+    name: 🏷️ Create tagged release
     runs-on: ubuntu-latest
-    needs: build
+    needs: [build, build_platforms]
     if: startsWith(github.ref, 'refs/tags/v')
     steps:
       - name: Checkout
@@ -140,16 +244,27 @@ jobs:
           path: dist
           merge-multiple: true
 
+      - name: Prepare release files
+        run: |
+          mkdir -p release
+          cd dist
+          zip "../release/${{ inputs.love_filename }}-love.zip" "${{ inputs.love_filename }}.love" 2>/dev/null || true
+          cp ${{ inputs.love_filename }}-windows.zip ../release/ 2>/dev/null || true
+          cp ${{ inputs.love_filename }}-macos.zip ../release/ 2>/dev/null || true
+          cp ${{ inputs.love_filename }}-linux.zip ../release/ 2>/dev/null || true
+          cd ..
+          ls -lh release/
+
       - name: Create draft release
         uses: softprops/action-gh-release@v2
         with:
           name: ${{ inputs.project_name }} ${{ github.ref_name }}
           draft: true
           generate_release_notes: true
-          files: dist/${{ inputs.love_filename }}-love.zip
+          files: release/*
 
   deploy:
-    name: Deploy to GitHub Pages
+    name: Deploy to GitHub Pages 🕸️
     runs-on: ubuntu-latest
     needs: build
     if: github.ref == format('refs/heads/{0}', inputs.branch)
