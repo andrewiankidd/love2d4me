@@ -103,15 +103,6 @@ All game config lives in `game/config.json`:
 | `interact` | Interaction prompt system. |
 | `savegame` | Save/load with slot management. |
 
-## Game Types Supported
-
-| Type | Projection | Collision | Example |
-|------|-----------|-----------|---------|
-| **Top-down RPG** | orthographic | pixel-color + collrect | Fear of the Dark |
-| **Side-scroller** | orthographic | pixel-color (solid/walk/hazard/grapple) | Platformer |
-| **Mode 7** | mode7 (scanline) | pixel-color | Mode 7 |
-| **2.5D city** | oblique (ground-plane) | polygon (point-in-ring) | G-Town |
-
 ## Convention Paths
 
 ```
@@ -180,10 +171,10 @@ Place a `portable.txt` file beside the game binary. All data writes go to `./<id
 
 ## Projects
 
-| Game | Type | Play |
-|------|------|------|
-| [Pocket Artemis](https://github.com/andrewiankidd/pocket-artemis) | Tamagotchi | [Web](https://tiltedcartridge.co.uk/pocket-artemis/Web/) |
-| [Fear of the Dark](https://github.com/andrewiankidd/legacy-lua-fotd) | Top-down RPG | [Web](https://andrewiankidd.github.io/legacy-lua-fotd/Web/) |
-| [Platformer](https://github.com/andrewiankidd/legacy-lua-platformer) | 2D side-scroller | [Web](https://andrewiankidd.github.io/legacy-lua-platformer/Web/) |
-| [Mode 7](https://github.com/andrewiankidd/legacy-lua-mode7) | Retro perspective | [Web](https://andrewiankidd.github.io/legacy-lua-mode7/Web/) |
-| [G-Town](https://github.com/andrewiankidd/legacy-lua-25d) | 2.5D driving | [Web](https://andrewiankidd.github.io/legacy-lua-25d/Web/) |
+| Game | Type | 🌐 | CI |
+|------|------|:--:|:--:|
+| [Pocket Artemis](https://github.com/andrewiankidd/pocket-artemis) | Tamagotchi | [🌐](https://tiltedcartridge.co.uk/pocket-artemis/Web/) | ![CI](https://github.com/andrewiankidd/pocket-artemis/actions/workflows/publish.yml/badge.svg) |
+| [Fear of the Dark](https://github.com/andrewiankidd/legacy-lua-fotd) | Top-down RPG | [🌐](https://andrewiankidd.github.io/legacy-lua-fotd/Web/) | ![CI](https://github.com/andrewiankidd/legacy-lua-fotd/actions/workflows/publish.yml/badge.svg) |
+| [Platformer](https://github.com/andrewiankidd/legacy-lua-platformer) | 2D side-scroller | [🌐](https://andrewiankidd.github.io/legacy-lua-platformer/Web/) | ![CI](https://github.com/andrewiankidd/legacy-lua-platformer/actions/workflows/publish.yml/badge.svg) |
+| [Mode 7](https://github.com/andrewiankidd/legacy-lua-mode7) | Retro perspective | [🌐](https://andrewiankidd.github.io/legacy-lua-mode7/Web/) | ![CI](https://github.com/andrewiankidd/legacy-lua-mode7/actions/workflows/publish.yml/badge.svg) |
+| [G-Town](https://github.com/andrewiankidd/legacy-lua-25d) | 2.5D driving | [🌐](https://andrewiankidd.github.io/legacy-lua-25d/Web/) | ![CI](https://github.com/andrewiankidd/legacy-lua-25d/actions/workflows/publish.yml/badge.svg) |
