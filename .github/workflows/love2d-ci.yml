@@ -333,9 +333,33 @@ jobs:
           chmod +x gradlew
           ./gradlew assembleEmbedNoRecordRelease
 
-      - name: Collect APK
+      - name: Sign APK
         run: |
-          find love-android/app/build/outputs/apk -name "*.apk" -exec cp {} "${{ inputs.love_filename }}-android.apk" \;
+          UNSIGNED=$(find love-android/app/build/outputs/apk -name "*.apk" | head -1)
+          ALIGNED="${UNSIGNED%.apk}-aligned.apk"
+          SIGNED="${{ inputs.love_filename }}-android.apk"
+
+          # Generate a throwaway keystore for sideload distribution
+          keytool -genkeypair -v \
+            -keystore release.keystore \
+            -alias release \
+            -keyalg RSA -keysize 2048 -validity 10000 \
+            -storepass android -keypass android \
+            -dname "CN=Tilted Cartridge, O=Tilted Cartridge, C=GB"
+
+          # Align then sign
+          "${ANDROID_HOME}/build-tools/34.0.0/zipalign" -v -p 4 "$UNSIGNED" "$ALIGNED"
+          "${ANDROID_HOME}/build-tools/34.0.0/apksigner" sign \
+            --ks release.keystore \
+            --ks-key-alias release \
+            --ks-pass pass:android \
+            --key-pass pass:android \
+            --out "$SIGNED" \
+            "$ALIGNED"
+
+          # Verify
+          "${ANDROID_HOME}/build-tools/34.0.0/apksigner" verify "$SIGNED"
+          echo "Signed APK: $(ls -lh "$SIGNED")"
 
       - name: Upload Android artifact
         uses: actions/upload-artifact@v4
