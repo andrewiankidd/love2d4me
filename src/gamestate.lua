@@ -477,9 +477,6 @@ function GameState.update(dt)
             loading_dots = (loading_dots + 1) % 4
         end
     elseif state == "menu" or state == "pause" then -- luacheck: ignore 542
-        if not Skin.is_picker_open() then
-            -- menu is idle, waits for keypressed
-        end
     elseif state == "gameplay" then
         if not Skin.is_picker_open() then
             if callbacks.on_gameplay_update then
