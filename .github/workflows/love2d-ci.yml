@@ -169,30 +169,71 @@ jobs:
             cd love-runtime && unzip -q love-download && rm love-download
           fi
 
-      - name: Checkout SFX stub
+      - name: Download app logo (Windows)
         if: matrix.platform == 'windows'
-        uses: actions/checkout@v4
+        uses: actions/download-artifact@v4
         with:
-          repository: andrewiankidd/love2d4me
-          sparse-checkout: .github/bin
-          path: love2d4me-bin
+          name: app-logo
+          path: logo-src
+        continue-on-error: true
 
       - name: Fuse (Windows)
         if: matrix.platform == 'windows'
         run: |
+          sudo apt-get install -y -qq nsis imagemagick
+
           LOVE_DIR="love-runtime/love-${LOVE_VERSION}-win64"
           mkdir -p out
           cat "${LOVE_DIR}/love.exe" "${{ inputs.love_filename }}.love" > "out/${{ inputs.love_filename }}.exe"
           cp "${LOVE_DIR}"/*.dll out/
           cp "${LOVE_DIR}/license.txt" out/ 2>/dev/null || true
 
-          # SFX config — extract to temp dir and run the fused exe
-          printf ';!@Install@!UTF-8!\nRunProgram="%s.exe"\n;!@InstallEnd@!\n' \
-            "${{ inputs.love_filename }}" > sfx_config.txt
+          # Generate .ico from logo (256, 48, 32, 16px layers)
+          if [[ -f logo-src/logo.png ]]; then
+            for sz in 256 48 32 16; do
+              convert logo-src/logo.png -resize "${sz}x${sz}" "icon_${sz}.png"
+            done
+            convert icon_256.png icon_48.png icon_32.png icon_16.png app.ico
+          else
+            # Fallback: extract icon from love.exe
+            cp "${LOVE_DIR}/love.exe" app.ico 2>/dev/null || true
+          fi
 
-          # Pack into single self-extracting exe
-          7z a -mx=9 -mmt=on game.7z ./out/*
-          cat love2d4me-bin/.github/bin/7zS2.sfx sfx_config.txt game.7z > "${{ inputs.love_filename }}-windows.exe"
+          # NSIS portable launcher script
+          cat > launcher.nsi << 'NSIEOF'
+          !include "FileFunc.nsh"
+          !include "MUI2.nsh"
+
+          Name "${DISPLAY_NAME}"
+          OutFile "${OUT_FILE}"
+          Icon "${ICON_FILE}"
+
+          VIProductVersion "1.0.0.0"
+          VIAddVersionKey "ProductName" "${DISPLAY_NAME}"
+          VIAddVersionKey "CompanyName" "Tilted Cartridge"
+          VIAddVersionKey "LegalCopyright" "Tilted Cartridge"
+          VIAddVersionKey "FileDescription" "${DISPLAY_NAME}"
+          VIAddVersionKey "FileVersion" "1.0.0.0"
+          VIAddVersionKey "ProductVersion" "1.0.0.0"
+
+          SilentInstall silent
+          RequestExecutionLevel user
+          SetCompressor /SOLID lzma
+
+          Section
+            SetOutPath "$TEMP\${EXE_NAME}"
+            File /r "out\*.*"
+            ExecWait '"$TEMP\${EXE_NAME}\${EXE_NAME}.exe"'
+            RMDir /r "$TEMP\${EXE_NAME}"
+          SectionEnd
+          NSIEOF
+
+          makensis \
+            -DDISPLAY_NAME="${{ inputs.project_name }}" \
+            -DOUT_FILE="${{ inputs.love_filename }}-windows.exe" \
+            -DICON_FILE="app.ico" \
+            -DEXE_NAME="${{ inputs.love_filename }}" \
+            launcher.nsi
 
       - name: Fuse (macOS)
         if: matrix.platform == 'macos'
