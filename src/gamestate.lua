@@ -269,17 +269,10 @@ function GameState.init(opts)
     love.window.setTitle(config.title or "LOVE2D Game")
 
     -- Window resolution from config (overrides conf.lua defaults).
-    -- On the web build we override again with the actual page viewport so the
-    -- game renders at native resolution and aspect — otherwise the canvas is
-    -- stuck at the conf'd size and gets CSS-stretched to fit the viewport.
+    -- On web the HTML template locks the canvas and CSS handles display
+    -- scaling, so we use config dimensions directly — no viewport override.
     local cfg_w = config.width or 800
     local cfg_h = config.height or 600
-    if love.system.getOS() == "Web" then
-        local dw, dh = love.window.getDesktopDimensions(1)
-        if dw and dh and dw > 0 and dh > 0 then
-            cfg_w, cfg_h = dw, dh
-        end
-    end
     love.window.setMode(cfg_w, cfg_h, { resizable = true })
 
     -- Identity derived from title (save directory per game)
@@ -357,7 +350,7 @@ function GameState.init(opts)
             return ps.mobile
         end
         if os_name == "Web" then
-            local w, h = love.graphics.getDimensions()
+            local w, h = love.window.getDesktopDimensions(1)
             if w <= 800 or h <= 600 then return ps.mobile end
             return ps.desktop
         end
