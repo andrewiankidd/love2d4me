@@ -127,8 +127,17 @@ function Input.init(opts)
     config.width = opts.width or love.graphics.getWidth()
     config.height = opts.height or love.graphics.getHeight()
     is_touch = detect_touch()
-    -- Apply defaults unless suppressed
-    if opts.bindings then
+    if opts.actions then
+        for action, def in pairs(opts.actions) do
+            local keys = def.keys or (DEFAULT_BINDINGS[action] and DEFAULT_BINDINGS[action].keys) or {}
+            Input.bind(action, { keys = keys })
+            if def.label then
+                ACTION_LABELS[action] = def.label
+            elseif not ACTION_LABELS[action] then
+                ACTION_LABELS[action] = action:gsub("_", " "):gsub("^%l", string.upper)
+            end
+        end
+    elseif opts.bindings then
         for action, bind_opts in pairs(opts.bindings) do
             Input.bind(action, bind_opts)
         end
@@ -139,6 +148,14 @@ function Input.init(opts)
             end
         end
     end
+end
+
+function Input.get_actions()
+    local result = {}
+    for action, _ in pairs(bindings) do
+        table.insert(result, action)
+    end
+    return result
 end
 
 function Input.set_mode(m)

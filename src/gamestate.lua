@@ -404,7 +404,7 @@ function GameState.init(opts)
     love.graphics.clear(0, 0, 0, 1)
     love.graphics.present()
 
-    Input.init()
+    Input.init({ actions = config.actions })
 
     -- Update skin button labels to show actual key bindings
     if Skin.is_active() then
