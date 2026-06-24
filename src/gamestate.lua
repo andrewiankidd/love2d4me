@@ -387,7 +387,6 @@ function GameState.init(opts)
         local actual_w, actual_h = love.graphics.getDimensions()
         Log.debug("Skin post-setMode", { requested = skin_w .. "x" .. skin_h, actual = actual_w .. "x" .. actual_h })
         Resolution.set(res_mode, skin_w, skin_h, skin_w, skin_h)
-        Input.set_buttons(Skin.get_buttons())
         Input.set_draw_enabled(false)
         Input.set_coord_transform(function(sx, sy)
             return Resolution.to_game(sx, sy)
@@ -406,12 +405,18 @@ function GameState.init(opts)
 
     Input.init({ actions = config.actions })
 
-    -- Update skin button labels to show actual key bindings
+    -- Generate skin buttons from zones + actions, or use explicit buttons
     if Skin.is_active() then
-        for _, btn in ipairs(Skin.get_buttons()) do
-            local key = Input.get_key_name(btn.action)
-            if key ~= "" then
-                btn.label = Input.get_key_label(key)
+        if Skin.has_zones() then
+            Skin.apply_actions(config.actions or {})
+        end
+        Input.set_buttons(Skin.get_buttons())
+        if not Skin.has_zones() then
+            for _, btn in ipairs(Skin.get_buttons()) do
+                local key = Input.get_key_name(btn.action)
+                if key ~= "" then
+                    btn.label = Input.get_key_label(key)
+                end
             end
         end
     end

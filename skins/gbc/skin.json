@@ -11,15 +11,10 @@
         "height": 260
     },
     "viewport_border": true,
-    "buttons": [
-        { "action": "move_up",    "x": 67,  "y": 315, "w": 46, "h": 46, "label": "^",      "color": "#1a1a2e" },
-        { "action": "move_left",  "x": 25,  "y": 357, "w": 46, "h": 46, "label": "<",      "color": "#1a1a2e" },
-        { "action": "move_right", "x": 109, "y": 357, "w": 46, "h": 46, "label": ">",      "color": "#1a1a2e" },
-        { "action": "move_down",  "x": 67,  "y": 399, "w": 46, "h": 46, "label": "v",      "color": "#1a1a2e" },
-        { "action": "confirm",    "x": 245, "y": 340, "w": 50, "h": 50, "label": "A",      "color": "#c62e65", "shape": "circle" },
-        { "action": "cancel",     "x": 195, "y": 390, "w": 50, "h": 50, "label": "B",      "color": "#c62e65", "shape": "circle" },
-        { "action": "pause",      "x": 110, "y": 480, "w": 45, "h": 16, "label": "START",  "color": "#444" },
-        { "action": "tab",        "x": 165, "y": 480, "w": 45, "h": 16, "label": "SELECT", "color": "#444" },
-        { "action": "skin_cycle", "x": 140, "y": 520, "w": 40, "h": 20, "label": "HOME",   "color": "#555" }
-    ]
+    "button_zones": {
+        "dpad":   { "cx": 90,  "cy": 380, "size": 46, "gap": 38, "color": "#1a1a2e" },
+        "face":   { "cx": 245, "cy": 380, "size": 50, "gap": 25, "color": "#c62e65", "shape": "circle" },
+        "system": { "cx": 160, "y": 475,  "w": 140,   "h": 16,   "gap": 8, "color": "#444" },
+        "home":   { "x": 140,  "y": 525,  "w": 40,    "h": 20,   "color": "#555" }
+    }
 }

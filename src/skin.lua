@@ -25,6 +25,14 @@ local shell_image = nil
 local overlay_shader = nil
 local skin_buttons = {}
 local skin_font = nil
+local last_actions = nil
+
+local FACE_ORDER = { "confirm", "cancel", "attack", "shoot", "interact", "sprint" }
+local SYSTEM_LABELS = {
+    pause = "START", tab = "SELECT", sprint = "RUN",
+    inventory = "INV", quest_log = "LOG",
+}
+local MAX_FACE = 4
 
 -- Picker state (declared early so Skin.init can populate picker_labels)
 local picker_open = false
@@ -192,6 +200,153 @@ function Skin.get_buttons()
     return skin_buttons
 end
 
+function Skin.has_zones()
+    return active_skin ~= nil and active_skin.button_zones ~= nil
+end
+
+function Skin.apply_actions(actions)
+    if not active_skin then return end
+    local zones = active_skin.button_zones
+    if not zones then return end
+    last_actions = actions
+
+    skin_buttons = {}
+
+    local dpad_set = { move_up = true, move_down = true, move_left = true, move_right = true }
+    local face_set = {}
+    local face = {}
+    local system = {}
+
+    for _, fa in ipairs(FACE_ORDER) do
+        if actions[fa] and #face < MAX_FACE then
+            table.insert(face, fa)
+            face_set[fa] = true
+        end
+    end
+
+    for action, _ in pairs(actions) do
+        if not dpad_set[action] and not face_set[action] and action ~= "skin_cycle" then
+            local is_overflow = false
+            for _, fa in ipairs(FACE_ORDER) do
+                if fa == action then is_overflow = true; break end
+            end
+            if is_overflow then
+                table.insert(system, action)
+            elseif action ~= "pause" and action ~= "tab" then
+                table.insert(system, action)
+            else
+                table.insert(system, action)
+            end
+        end
+    end
+
+    local sys_rank = { pause = 1, tab = 2, sprint = 3, inventory = 4, quest_log = 5 }
+    table.sort(system, function(a, b)
+        local ra = sys_rank[a] or 50
+        local rb = sys_rank[b] or 50
+        if ra ~= rb then return ra < rb end
+        return a < b
+    end)
+
+    -- D-pad cross
+    if zones.dpad then
+        local z = zones.dpad
+        local sz = z.size or 46
+        local gap = z.gap or 38
+        local dpad_btns = {
+            { action = "move_up",    dx = -sz / 2,        dy = -gap / 2 - sz, label = "^" },
+            { action = "move_down",  dx = -sz / 2,        dy = gap / 2,       label = "v" },
+            { action = "move_left",  dx = -gap / 2 - sz,  dy = -sz / 2,       label = "<" },
+            { action = "move_right", dx = gap / 2,         dy = -sz / 2,       label = ">" },
+        }
+        for _, d in ipairs(dpad_btns) do
+            if actions[d.action] then
+                table.insert(skin_buttons, {
+                    action = d.action,
+                    x = math.floor(z.cx + d.dx),
+                    y = math.floor(z.cy + d.dy),
+                    w = sz, h = sz,
+                    label = d.label,
+                    color = z.color,
+                    held = false,
+                })
+            end
+        end
+    end
+
+    -- Face buttons (A/B/X/Y cluster)
+    if zones.face and #face > 0 then
+        local z = zones.face
+        local sz = z.size or 50
+        local g = z.gap or 25
+        local face_labels = { "A", "B", "X", "Y" }
+        local patterns = {
+            [1] = { { 0, 0 } },
+            [2] = { { g, -g }, { -g, g } },
+            [3] = { { g, 0 }, { -g * 0.5, g }, { -g * 0.5, -g } },
+            [4] = { { g, 0 }, { 0, g }, { 0, -g }, { -g, 0 } },
+        }
+        local n = math.min(#face, MAX_FACE)
+        local offsets = patterns[n]
+        for i = 1, n do
+            local off = offsets[i]
+            table.insert(skin_buttons, {
+                action = face[i],
+                x = math.floor(z.cx + off[1] - sz / 2),
+                y = math.floor(z.cy + off[2] - sz / 2),
+                w = sz, h = sz,
+                label = face_labels[i] or "?",
+                shape = z.shape or "rect",
+                color = z.color,
+                held = false,
+            })
+        end
+    end
+
+    -- System row
+    if zones.system and #system > 0 then
+        local z = zones.system
+        local bh = z.h or 16
+        local gap = z.gap or 8
+        local total_w = z.w or 140
+        local n = #system
+        local bw = math.floor((total_w - gap * (n - 1)) / n)
+        local start_x = math.floor(z.cx - total_w / 2)
+        for i, action in ipairs(system) do
+            local def = actions[action]
+            local label = SYSTEM_LABELS[action]
+            if not label and def and def.label then
+                label = def.label:upper():sub(1, 6)
+            end
+            if not label then
+                label = action:upper():gsub("_", ""):sub(1, 6)
+            end
+            table.insert(skin_buttons, {
+                action = action,
+                x = start_x + (i - 1) * (bw + gap),
+                y = z.y,
+                w = bw, h = bh,
+                label = label,
+                color = z.color,
+                held = false,
+            })
+        end
+    end
+
+    -- Home button
+    if zones.home and actions.skin_cycle then
+        local z = zones.home
+        table.insert(skin_buttons, {
+            action = "skin_cycle",
+            x = z.x, y = z.y,
+            w = z.w or 40, h = z.h or 20,
+            label = "HOME",
+            color = z.color,
+            held = false,
+        })
+    end
+end
+
 function Skin.render(game_draw_fn, resolution_module)
     if not active_skin then
         if resolution_module then
@@ -347,11 +502,16 @@ function Skin.switch(skin_name, game_w, game_h, resolution_module, input_module)
     end
 
     if input_module then
+        if last_actions and Skin.has_zones() then
+            Skin.apply_actions(last_actions)
+        end
         input_module.set_buttons(Skin.get_buttons())
-        for _, btn in ipairs(Skin.get_buttons()) do
-            local key = input_module.get_key_name(btn.action)
-            if key ~= "" then
-                btn.label = input_module.get_key_label(key)
+        if not Skin.has_zones() then
+            for _, btn in ipairs(Skin.get_buttons()) do
+                local key = input_module.get_key_name(btn.action)
+                if key ~= "" then
+                    btn.label = input_module.get_key_label(key)
+                end
             end
         end
     end
