@@ -254,6 +254,12 @@ jobs:
           mkdir -p love-android/app/src/embed/assets
           cp "${{ inputs.love_filename }}.love" love-android/app/src/embed/assets/game.love
 
+      - name: Set app identity
+        run: |
+          PKG_SUFFIX=$(echo "${{ inputs.love_filename }}" | tr '-' '_')
+          sed -i "s/^app\.application_id=.*/app.application_id=co.uk.tiltedcartridge.${PKG_SUFFIX}/" love-android/gradle.properties
+          sed -i "s/^app\.name=.*/app.name=${{ inputs.project_name }}/" love-android/gradle.properties
+
       - name: Set up JDK 17
         uses: actions/setup-java@v4
         with:
