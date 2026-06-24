@@ -273,7 +273,18 @@ function GameState.init(opts)
     -- scaling, so we use config dimensions directly — no viewport override.
     local cfg_w = config.width or 800
     local cfg_h = config.height or 600
+    local os_name = love.system.getOS()
+    local dw, dh = love.window.getDesktopDimensions(1)
+    local gfx_w, gfx_h = love.graphics.getDimensions()
+    Log.info("Pre-setMode", {
+        os = os_name,
+        config = cfg_w .. "x" .. cfg_h,
+        desktop = dw .. "x" .. dh,
+        graphics = gfx_w .. "x" .. gfx_h,
+    })
     love.window.setMode(cfg_w, cfg_h, { resizable = true })
+    local post_w, post_h = love.graphics.getDimensions()
+    Log.info("Post-setMode", { requested = cfg_w .. "x" .. cfg_h, actual = post_w .. "x" .. post_h })
 
     -- Identity derived from title (save directory per game)
     local identity = config.identity or config.title or "love2d-game"
@@ -345,27 +356,37 @@ function GameState.init(opts)
     local function platform_default_skin()
         local ps = config.platform_skins
         if not ps then return nil end
-        local os_name = love.system.getOS()
-        if os_name == "Android" or os_name == "iOS" then
+        local cur_os = love.system.getOS()
+        if cur_os == "Android" or cur_os == "iOS" then
             return ps.mobile
         end
-        if os_name == "Web" then
+        if cur_os == "Web" then
             local w, h = love.window.getDesktopDimensions(1)
+            Log.info("Skin platform check (Web)", { desktop_dims = w .. "x" .. h, threshold = "800x600" })
             if w <= 800 or h <= 600 then return ps.mobile end
             return ps.desktop
         end
         return ps.desktop
     end
-    local skin_name = Skin.parse_args()
-        or Settings.get("skin")
-        or platform_default_skin()
-        or config.default_skin
+    local skin_from_args = Skin.parse_args()
+    local skin_from_settings = Settings.get("skin")
+    local skin_from_platform = platform_default_skin()
+    local skin_from_config = config.default_skin
+    local skin_name = skin_from_args or skin_from_settings or skin_from_platform or skin_from_config
+    Log.info("Skin selection", {
+        chosen = tostring(skin_name),
+        from_args = tostring(skin_from_args),
+        from_settings = tostring(skin_from_settings),
+        from_platform = tostring(skin_from_platform),
+        from_config = tostring(skin_from_config),
+    })
     if skin_name and Skin.init(skin_name, game_w, game_h) then
         local skin_w, skin_h = Skin.get_dimensions()
-        -- Expand the window to fit the skin's bezel — game resolution stays the same
+        Log.info("Skin setMode", { skin = skin_name, target = skin_w .. "x" .. skin_h })
         love.window.setMode(skin_w, skin_h, { resizable = true })
+        local actual_w, actual_h = love.graphics.getDimensions()
+        Log.info("Skin post-setMode", { requested = skin_w .. "x" .. skin_h, actual = actual_w .. "x" .. actual_h })
         Resolution.set(res_mode, skin_w, skin_h, skin_w, skin_h)
-        -- Skin owns button rendering and coordinate transform
         Input.set_buttons(Skin.get_buttons())
         Input.set_draw_enabled(false)
         Input.set_coord_transform(function(sx, sy)
@@ -373,8 +394,9 @@ function GameState.init(opts)
         end)
         Log.info("Resolution initialized (skin)", { mode = res_mode, skin = skin_w .. "x" .. skin_h, game = game_w .. "x" .. game_h })
     else
-        Resolution.set(res_mode, game_w, game_h, love.graphics.getDimensions())
-        Log.info("Resolution initialized", { mode = res_mode, w = game_w, h = game_h })
+        local screen_w, screen_h = love.graphics.getDimensions()
+        Resolution.set(res_mode, game_w, game_h, screen_w, screen_h)
+        Log.info("Resolution initialized (no skin)", { mode = res_mode, game = game_w .. "x" .. game_h, screen = screen_w .. "x" .. screen_h })
     end
 
     -- Force a black frame so the window doesn’t appear frozen during init
