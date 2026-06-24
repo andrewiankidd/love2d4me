@@ -250,8 +250,12 @@ jobs:
       - name: Set app identity
         run: |
           PKG_SUFFIX=$(echo "${{ inputs.love_filename }}" | tr '-' '_')
-          sed -i "s/^app\.application_id=.*/app.application_id=co.uk.tiltedcartridge.${PKG_SUFFIX}/" love-android/gradle.properties
-          sed -i "s/^app\.name=.*/app.name=${{ inputs.project_name }}/" love-android/gradle.properties
+          PROPS=love-android/gradle.properties
+          sed -i "s/^app\.application_id=.*/app.application_id=co.uk.tiltedcartridge.${PKG_SUFFIX}/" "$PROPS"
+          sed -i "s/^app\.name_byte_array=.*/#app.name_byte_array=/" "$PROPS"
+          sed -i "s/^#app\.name=.*/app.name=${{ inputs.project_name }}/" "$PROPS"
+          echo "--- gradle.properties identity ---"
+          grep -E "^app\.(name|application_id)" "$PROPS"
 
       - name: Set up JDK 17
         uses: actions/setup-java@v4
