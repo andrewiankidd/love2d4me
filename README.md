@@ -180,7 +180,10 @@ Place a `portable.txt` file beside the game binary. All data writes go to `./<id
 
 ## Projects
 
-- [legacy-lua-fotd](https://github.com/andrewiankidd/legacy-lua-fotd) -- Fear of the Dark (top-down RPG)
-- [legacy-lua-platformer](https://github.com/andrewiankidd/legacy-lua-platformer) -- 2D Platformer
-- [legacy-lua-mode7](https://github.com/andrewiankidd/legacy-lua-mode7) -- Mode 7 experiment
-- [legacy-lua-25d](https://github.com/andrewiankidd/legacy-lua-25d) -- G-Town (2.5D driving)
+| Game | Type | Play |
+|------|------|------|
+| [Pocket Artemis](https://github.com/andrewiankidd/pocket-artemis) | Tamagotchi | [Web](https://andrewiankidd.github.io/pocket-artemis/Web/) |
+| [Fear of the Dark](https://github.com/andrewiankidd/legacy-lua-fotd) | Top-down RPG | [Web](https://andrewiankidd.github.io/legacy-lua-fotd/Web/) |
+| [Platformer](https://github.com/andrewiankidd/legacy-lua-platformer) | 2D side-scroller | [Web](https://andrewiankidd.github.io/legacy-lua-platformer/Web/) |
+| [Mode 7](https://github.com/andrewiankidd/legacy-lua-mode7) | Retro perspective | [Web](https://andrewiankidd.github.io/legacy-lua-mode7/Web/) |
+| [G-Town](https://github.com/andrewiankidd/legacy-lua-25d) | 2.5D driving | [Web](https://andrewiankidd.github.io/legacy-lua-25d/Web/) |
