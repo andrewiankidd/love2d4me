@@ -1,6 +1,6 @@
 // Replace the love.js web build HTML with our template.
-// Reads game resolution from config.json and INITIAL_MEMORY from the
-// generated index.html, stamps them into site/game.html, overwrites.
+// Extracts INITIAL_MEMORY from the generated HTML and stamps it
+// (along with title) into site/game.html.
 // Also removes the love.js theme directory (CSS is inlined in template).
 const fs = require('fs');
 const path = require('path');
@@ -16,12 +16,10 @@ if (!fs.existsSync(indexPath)) {
     process.exit(1);
 }
 
-// Read game config
-let gameW = 800, gameH = 600, title = 'Game';
+// Read game config for title
+let title = 'Game';
 if (fs.existsSync(configPath)) {
     const cfg = JSON.parse(fs.readFileSync(configPath, 'utf8'));
-    gameW = cfg.width || 800;
-    gameH = cfg.height || 600;
     title = cfg.title || 'Game';
 }
 
@@ -33,8 +31,6 @@ const memory = memMatch ? memMatch[1] : '16777216';
 // Stamp template and overwrite
 let html = fs.readFileSync(templatePath, 'utf8');
 html = html.replace(/\{\{title\}\}/g, title);
-html = html.replace(/\{\{width\}\}/g, String(gameW));
-html = html.replace(/\{\{height\}\}/g, String(gameH));
 html = html.replace(/\{\{memory\}\}/g, memory);
 
 fs.writeFileSync(indexPath, html);
@@ -45,4 +41,4 @@ if (fs.existsSync(themeDir)) {
     fs.rmSync(themeDir, { recursive: true });
 }
 
-console.log('Web build patched (' + gameW + 'x' + gameH + ')');
+console.log('Web build patched — ' + title);
